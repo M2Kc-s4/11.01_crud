@@ -1,10 +1,10 @@
-import { Entity, ID, ValueObject } from "@domain/common/abstractions"
 import { DomainError } from "@shared/error"
-import type { Topic } from "./topic"
-import type { User } from "@domain/identity/user"
-import type { Updatable } from "@shared/lib"
 import { Serializable } from "nucleus-mold"
-import { HashMap } from "@domain/common/value-objects/hash-map"
+import { ID } from "@domain/common/value-objects/id"
+import type User from "@domain/identity/user"
+import HashMap from "@domain/common/value-objects/hash-map"
+import { equals } from "@shared/lib"
+import type Topic from "./topic"
 
 
 export const ErrAnswerLength = new DomainError("ANSWER_TEXT_LENGTH", "ANSWER_TEXT_LENGTH")
@@ -14,7 +14,9 @@ export const ErrQuestionNoCorrectAnswer = new DomainError("QUESTION_NO_CORRECT_A
 
 
 @Serializable()
-export class AnswerText extends ValueObject<string> {
+export class AnswerText {
+    constructor(private v: string) {}
+
     static from(text: string) {
         if (text.length < 8 || text.length > 64) throw ErrAnswerLength
 
@@ -24,25 +26,28 @@ export class AnswerText extends ValueObject<string> {
 
 
 @Serializable()
-export class CorrectStatus extends ValueObject<boolean> {
+export class CorrectStatus {
+    constructor(private v: boolean) {}
+
     static get Correct() { return new CorrectStatus(true) }
 
     static get Wrong() { return new CorrectStatus(false) }
 
-    isCorrect() { return this._value === true }
-    isWrong() { return !this.isCorrect()}
+    isCorrect() { return this.v }
+    isWrong() { return !this.v}
 }
 
 
 @Serializable()
-export class Answer extends Entity {
+export class Answer {
     private constructor(
+        readonly id: ID<Answer>,
         private _text: AnswerText,
         private _correctness: CorrectStatus
-    ) {super()}
+    ) {}
 
     static create(text: AnswerText, status: CorrectStatus) {
-        return new Answer(text, status) as Updatable<Answer>
+        return new Answer(ID.generate(), text, status)
     }
 
     get correctness() { return this._correctness }
@@ -50,7 +55,9 @@ export class Answer extends Entity {
 
 
 @Serializable()
-export class QuestionText extends ValueObject<string> {
+export class QuestionText {
+    constructor(private v: string) {}
+
     static from(text: string) {
         if (text.length < 8 || text.length > 128) throw ErrQuestionTextLength
 
@@ -60,13 +67,14 @@ export class QuestionText extends ValueObject<string> {
 
 
 @Serializable()
-export class Question extends Entity {
+export default class Question {
     private constructor(
+        readonly id: ID<Question>,
         private _text: QuestionText,
         private _byTopic: ID<Topic>,
         private _createdBy: ID<User>,
         private _answers: HashMap<ID<Answer>, Answer>
-    ) { super()}
+    ) {}
 
 
     static create(text: QuestionText, createdBy: ID<User>, byTopic: ID<Topic>, answers: Answer[]) {
@@ -77,12 +85,12 @@ export class Question extends Entity {
         )) throw ErrQuestionNoCorrectAnswer
 
         return new Question(
+            ID.generate(),
             text,
             byTopic,
             createdBy,
-
             HashMap.fromEntries(answers.map(a => [a.id, a]))
-        ) as Updatable<Question>
+        )
     }
 
 
@@ -93,7 +101,7 @@ export class Question extends Entity {
         if (selectedAnswerIDs.length !== correctAnswers.length) return false
 
         return correctAnswers.every(correctAnswer =>
-            selectedAnswerIDs.some(selected => correctAnswer.id.equals(selected))
+            selectedAnswerIDs.some(selectedID => equals(correctAnswer.id, selectedID))
         )
     }
 }

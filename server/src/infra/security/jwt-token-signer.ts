@@ -1,21 +1,21 @@
-import { importPKCS8, importSPKI, jwtVerify, SignJWT } from "jose"
-import { UserRole, type User, type UserRoleType } from "@domain/identity/user"
-import { ID } from "@domain/common/abstractions"
-import type { IAccessTokenSigner, IRefreshTokenSigner, Session } from "@domain/identity/session"
-import { readFileSync } from 'fs'
-import crypto from 'crypto'
+import { ID } from '@domain/common/value-objects/id'
+import type Session from '@domain/identity/session'
+import type { IJWTSigner } from '@domain/identity/session'
+import type User from '@domain/identity/user'
+import { UserRole, type UserRoleType } from '@domain/identity/user'
+import { KeyObject } from 'crypto'
+import { jwtVerify, SignJWT } from 'jose'
 
-type ITokenSigner = IAccessTokenSigner & IRefreshTokenSigner 
 
-export class TokenSigner implements ITokenSigner {
+export class TokenSigner implements IJWTSigner {
     constructor(
-        private accessPub: crypto.KeyObject,
-        private accessPri: crypto.KeyObject,
-        private refreshPub: crypto.KeyObject,
-        private refreshPri: crypto.KeyObject,
+        private accessPub: KeyObject,
+        private accessPri: KeyObject,
+        private refreshPub: KeyObject,
+        private refreshPri: KeyObject,
     ) {}
 
-    async signAccess(user: User) {
+    async signAccess(user: Readonly<User>) {
         const token = await new SignJWT({roles: user.roles.map(r => r.asString())})
         .setProtectedHeader({ alg: 'ES256' })
         .setSubject(user.id.asString())
@@ -26,7 +26,7 @@ export class TokenSigner implements ITokenSigner {
         return token
     }
 
-    async signRefresh(session: Session) {
+    async signRefresh(session: Readonly<Session>) {
         const token = await new SignJWT({sessionID: session.id.asString()})
         .setProtectedHeader({ alg: 'ES256' })
         .setIssuedAt()

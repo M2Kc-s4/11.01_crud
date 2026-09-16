@@ -1,9 +1,12 @@
-import { ValueObject } from "@domain/common/abstractions"
 import { Serializable } from "nucleus-mold"
 
 
 @Serializable()
-export class DateTime extends ValueObject<string> {
+export default class DateTime {
+    constructor(
+        private v: string
+    ) {}
+
     static now() {
         return new DateTime(new Date().toISOString())
     }
@@ -13,7 +16,7 @@ export class DateTime extends ValueObject<string> {
     }
 
     private toDate(): Date {
-        return new Date(this._value)
+        return new Date(this.v)
     }
 
 
@@ -49,6 +52,6 @@ export class DateTime extends ValueObject<string> {
 
 
     public format(): string {
-        return this._value
+        return this.v
     }
 }

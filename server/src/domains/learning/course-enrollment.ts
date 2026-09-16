@@ -1,52 +1,58 @@
-import { Entity, ID, ValueObject } from "@domain/common/abstractions"
-import type { Course } from "@domain/content/course"
-import type { User } from "@domain/identity/user"
 import { DomainError } from "@shared/error"
-import { TopicEnrollment, type TopicEnrollmentAttempt } from "./topic-enrollment"
 import type { TopicNumber } from "@domain/content/topic"
-import type { Updatable } from "@shared/lib"
 import { Serializable } from "nucleus-mold"
-import { HashMap } from "@domain/common/value-objects/hash-map"
+import { ID } from "@domain/common/value-objects/id"
+import type User from "@domain/identity/user"
+import type Course from "@domain/content/course"
+import HashMap from "@domain/common/value-objects/hash-map"
+import TopicEnrollment from "./topic-enrollment"
+import type { TopicEnrollmentAttempt } from "./topic-enrollment"
+
 
 export const ErrTopicEnrollmentNotDefined = new DomainError('TOPIC_ENROLLMENT_NOT_DEFINED', 'TOPIC_ENROLLMENT_NOT_DEFINED')
 
 
 @Serializable()
-export class EnrollmentProgress extends ValueObject<number> {
+export class EnrollmentProgress {
+    constructor(private v: number) {}
+
     static createNullish() {
         return new EnrollmentProgress(0)
     }
 
-    incremented() { return new EnrollmentProgress(this._value + 1) }
+    incremented() { return new EnrollmentProgress(this.v + 1) }
 
-    get completedCount() { return this._value }
+    get completedCount() { return this.v }
 }
 
 
 @Serializable()
-export class Enrollment extends Entity {
+export class Enrollment {
     private constructor(
+        readonly id: ID<Enrollment>,
         private _userID: ID<User>,
         private _courseID: ID<Course>,
         private _progress: EnrollmentProgress,
         private _topicEnrollments: HashMap<TopicNumber, TopicEnrollment>
-    ) { super() }
+    ) {}
 
 
     static create(userID: ID<User>, courseID: ID<Course>) {
         return new Enrollment(
+            ID.generate(),
             userID,
             courseID,
             EnrollmentProgress.createNullish(),
             HashMap.new()
-        ) as Updatable<Enrollment>
+        )
     }
 
 
     registerAttempt(attempt: TopicEnrollmentAttempt) {
         const number = attempt.number
+
         if (!this._topicEnrollments.has(number)) {
-            this._topicEnrollments.set(number, TopicEnrollment.create(attempt.topicID))
+            this._topicEnrollments.set(number, TopicEnrollment.create(attempt.topicID, attempt.number))
         }
 
         const topicEnrollment = this._topicEnrollments.get(number)!
@@ -63,10 +69,8 @@ export class Enrollment extends Entity {
     canStartTopic(number: TopicNumber, prerequisites: TopicNumber[]) {
         if (number.isFirst()) return true
 
-        const passed = prerequisites.every(req => {
-            const enroll = this._topicEnrollments.get(req)
-
-            return enroll ? enroll.isCompleted() : false
+        const passed = prerequisites.every(preq => {
+            return this._topicEnrollments.get(preq)?.isCompleted()
         })
         
         return passed

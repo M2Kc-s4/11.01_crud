@@ -5,7 +5,7 @@ BEGIN
     SELECT 
         (ans.key)::jsonb AS key,
         ans.value AS value
-    FROM jsonb_each(hashmap_data->'_value') AS ans;
+    FROM jsonb_each(hashmap_data->'v') AS ans;
 END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 
@@ -13,7 +13,7 @@ $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 CREATE OR REPLACE FUNCTION val(vo_data jsonb)
 RETURNS text AS $$
 BEGIN
-    RETURN vo_data->>'_value';
+    RETURN vo_data->>'v';
 END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 
@@ -22,7 +22,7 @@ $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 CREATE OR REPLACE FUNCTION valj(vo_data jsonb)
 RETURNS jsonb AS $$
 BEGIN
-    RETURN vo_data->'_value';
+    RETURN vo_data->'v';
 END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 
@@ -32,7 +32,7 @@ SELECT
     id,
     val(data->'_username') AS username,
     val(data->'_telegramLink') AS "telegramLink",
-    jsonb_path_query_array(data, '$._roles[*]._value') AS roles
+    jsonb_path_query_array(data, '$._roles[*].v') AS roles
 FROM users;
 
 
@@ -44,9 +44,9 @@ SELECT
     val(c.data -> '_description') AS description,
     val(c.data -> '_status') AS status,
     val(c.data -> '_createdBy') AS "createdBy",
-    (select val(data->'_username') from users where c.data->'_createdBy' = data->'_id') as "createdByName", 
-    (SELECT count(*) from topics WHERE data->'_byCourse' = c.data->'_id') as "topicsCount",
-    (SELECT count(*) FROM enrollments where data->'_courseID' = c.data->'_id') as "studentsCount"
+    (select val(data->'_username') from users where c.data->'_createdBy' = data->'id') as "createdByName", 
+    (SELECT count(*) from topics WHERE data->'_byCourse' = c.data->'id') as "topicsCount",
+    (SELECT count(*) FROM enrollments where data->'_courseID' = c.data->'id') as "studentsCount"
 from courses c;
 
 
@@ -63,12 +63,12 @@ SELECT
     val(t.data->'_status') AS status,
     val(t.data->'_byCourse') AS "courseID",
     val(t.data->'_createdBy') AS "createdBy",
-    (select count(*) from questions where data->'_byTopic' = t.data->'_id') as "questionsCount",
-    jsonb_path_query_array(t.data, '$._prerequisites[*]._value') AS prerequisites
+    (select count(*) from questions where data->'_byTopic' = t.data->'id') as "questionsCount",
+    jsonb_path_query_array(t.data, '$._prerequisites[*].v') AS prerequisites
 FROM topics t;
 
 
-CREATE  VIEW questions_r AS
+CREATE or replace  VIEW questions_r AS
 SELECT 
     id,
     val(data->'_text') AS text,
@@ -78,7 +78,7 @@ SELECT
     (
         SELECT jsonb_agg(
             jsonb_build_object(
-                'id', val(ans.value->'_id'),
+                'id', val(ans.value->'id'),
                 'text', val(ans.value->'_text'),
                 'isCorrect', val(ans.value->'_correctness')::boolean
             )
@@ -98,7 +98,7 @@ SELECT
     (
         select val(data->'_title') 
         from courses 
-        where data->'_id' = e.data->'_courseID'
+        where data->'id' = e.data->'_courseID'
     ) as title,
     (
         select count(*)
@@ -108,18 +108,18 @@ SELECT
     (
         select val(data->'_username')
         from users
-        where data->'_id' = e.data->'_userID'
+        where data->'id' = e.data->'_userID'
     ) as username,
     (
         SELECT coalesce(
             jsonb_agg(
                 jsonb_build_object(
-                    'id', val(value->'_id'),
+                    'id', val(value->'id'),
                     'topicID', val(value->'_topicID'),
-                    'completedQuestions', (valj(value->'_progress')->>'completed')::int,
-                    'questionCount', (valj(value->'_progress')->>'total')::int,
-                    'number', val(key)::int,
-                    'isCompleted', (valj(value->'_progress')->>'completed')::int >= (valj(value->'_progress')->>'total')::int * 0.8
+                    'completedQuestions', (value->'_progress'->>'_completed')::int,
+                    'questionCount', (value->'_progress'->>'_total')::int,
+                    'number', val(value->'_number')::int,
+                    'isCompleted', (value->'_progress'->>'_completed')::int >= (value->'_progress'->>'_total')::int * 0.8
                 )
             ),
             '[]'::jsonb

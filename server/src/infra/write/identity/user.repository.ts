@@ -1,7 +1,8 @@
 import type { IUserRepository } from "@applications/interfaces/itransaction-manager"
-import type { User, UserUsername } from "@domain/identity/user"
 import { sql } from "@m2k-5f/pgtx"
-import { AbstractRepository, type Row, type RowData } from "../common/abstract_repository"
+import type User from "@domain/identity/user"
+import type { UserUsername } from "@domain/identity/user"
+import { AbstractRepository, type RowData } from "../common/abstract_repository"
 
 export class UserRepository extends AbstractRepository<User> implements IUserRepository {
     protected override tablename: string = "users"

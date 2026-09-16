@@ -1,10 +1,10 @@
 import type { ITransactionManager } from "@applications/interfaces/itransaction-manager";
-import { ID } from "@domain/common/abstractions";
-import { Course, CourseDescription, CourseTitle } from "@domain/content/course";
-import { Question, Answer, AnswerText, CorrectStatus, QuestionText } from "@domain/content/question";
-import { Topic, TopicDescription, TopicNumber, TopicTitle } from "@domain/content/topic";
+import { ID } from "@domain/common/value-objects/id";
+import Course, { CourseDescription, CourseTitle } from "@domain/content/course";
+import Question, { Answer, AnswerText, CorrectStatus, QuestionText } from "@domain/content/question";
+import Topic, { TopicDescription, TopicNumber, TopicTitle } from "@domain/content/topic";
 import { DomainError, ErrNotFound } from "@shared/error";
-import type { Updatable } from "@shared/lib";
+import { equals } from "@shared/lib";
 
 
 type CreateCourseCMD = {
@@ -54,11 +54,14 @@ export class CourseManagementService {
 
     createCourse(cmd: CreateCourseCMD) {
         return this.txmanager.begin(async uow => {
-            if (await uow.courses.checkCourseExistsOnUser(
+            const exists = await uow.courses.checkCourseExistsOnUser(
                 ID.from(cmd.uid), 
                 CourseTitle.from(cmd.title)
-            )) throw ErrCourseTitleExist
+            )
 
+            if (exists) {
+                throw ErrCourseTitleExist
+            }
 
             const course = Course.create(
                 CourseTitle.from(cmd.title),
@@ -81,11 +84,13 @@ export class CourseManagementService {
                 ID.from(cmd.courseID)
             )
 
-            if (!course) 
+            if (!course) {
                 throw ErrNotFound
+            }
 
-            if (!course.createdBy.equals(ID.from(cmd.uid))) 
+            if (!equals(course.createdBy, ID.from(cmd.uid))) {
                 throw ErrCourseNotCreatedBy
+            }
 
             course.archive()
 
@@ -104,11 +109,13 @@ export class CourseManagementService {
                 ID.from(cmd.courseID)
             )
 
-            if (!course) 
+            if (!course) {
                 throw ErrNotFound
+            }
 
-            if (!course.createdBy.equals(ID.from(cmd.uid))) 
+            if (!equals(course.createdBy, ID.from(cmd.uid))) {
                 throw ErrCourseNotCreatedBy
+            }
 
             course.activate()
 
@@ -127,9 +134,11 @@ export class CourseManagementService {
                 ID.from(cmd.courseID)
             )
             
-            if (!course) throw ErrNotFound
+            if (!course) {
+                throw ErrNotFound
+            }
 
-            if (!course.createdBy.equals(ID.from(cmd.uid))) {
+            if (!equals(course.createdBy, ID.from(cmd.uid))) {
                 throw ErrCourseNotCreatedBy
             }
 
@@ -137,7 +146,7 @@ export class CourseManagementService {
                 await uow.topics.countByCourse(ID.from(cmd.courseID))
             )
 
-            let topic: Updatable<Topic>
+            let topic: Topic
 
             switch (cmd.accessType) {
                 case 'afterPrevious': {
@@ -176,9 +185,11 @@ export class CourseManagementService {
                 ID.from(cmd.topicID)
             )
 
-            if (!topic) throw ErrNotFound
-
-            if (!topic.createdBy.equals(ID.from(cmd.uid))) {
+            if (!topic) {
+                throw ErrNotFound
+            }
+            
+            if (!equals(topic.createdBy, ID.from(cmd.uid))) {
                 throw ErrTopicNotCreatedBy
             }
 
@@ -199,9 +210,11 @@ export class CourseManagementService {
                 ID.from(cmd.topicID)
             )
 
-            if (!topic) throw ErrNotFound
+            if (!topic) {
+                throw ErrNotFound
+            }
 
-            if (!topic.createdBy.equals(ID.from(cmd.uid))) {
+            if (!equals(topic.createdBy, ID.from(cmd.uid))) {
                 throw ErrTopicNotCreatedBy
             }
 
@@ -222,9 +235,11 @@ export class CourseManagementService {
                 ID.from(cmd.topicID)
             )
 
-            if (!topic) throw ErrNotFound
+            if (!topic) {
+                throw ErrNotFound
+            }
 
-            if (!topic.createdBy.equals(ID.from(cmd.uid))) {
+            if (!equals(topic.createdBy, ID.from(cmd.uid))) {
                 throw ErrTopicNotCreatedBy
             }
 

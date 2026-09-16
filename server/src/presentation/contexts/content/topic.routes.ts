@@ -1,7 +1,6 @@
 import Elysia, { t } from "elysia";
 import { authFilter } from "../../common/auth.middleware";
 import { ErrNotFound } from "@shared/error";
-import { ID } from "@domain/common/abstractions";
 import { courseManagementService, reader } from "@composition";
 
 export const topicRoutes = new Elysia()

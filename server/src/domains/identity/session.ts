@@ -1,9 +1,9 @@
-import { Entity, ID, ValueObject } from "@domain/common/abstractions"
 import { Serializable } from "nucleus-mold"
-import type { User, UserRole } from "./user"
-import { DateTime } from "@domain/common/value-objects/date-time"
-import type { Updatable } from "@shared/lib"
 import { UnauthorizedError } from "@shared/error"
+import type User from "./user"
+import { ID } from "@domain/common/value-objects/id"
+import type { UserRole } from "./user"
+import DateTime from "@domain/common/value-objects/date-time"
 
 
 export const ErrSessionNotFound = new UnauthorizedError("SESSION_NOT_FOUND", "Сессия не найдена")
@@ -11,28 +11,26 @@ export const ErrRefreshTokenInvalid = new UnauthorizedError("INVAlID_REFRESH_TOK
 export const ErrTokenExpired = new UnauthorizedError("ACCESS_TOKEN_EXPIRED", "token expired")
 
 
-export interface IRefreshTokenSigner {
-    signRefresh(session: Session): Promise<string>
+export interface IJWTSigner {
+    signRefresh(session: Readonly<Session>): Promise<string>
     verifyRefresh(token: string): Promise<{uid: ID<User>, sessionID: ID<Session>}>
-}
-
-export interface IAccessTokenSigner {
-    signAccess(user: User): Promise<string>
+    signAccess(user: Readonly<User>): Promise<string>
     verifyAccess(token: string): Promise<{uid: ID<User>, roles: UserRole[]}>
 }
 
 
 @Serializable()
-export class RefreshToken extends ValueObject<string> {
-    static async generate(session: Session, signStrategy: IRefreshTokenSigner) {
+export class RefreshToken {
+    constructor(private v: string) {}
+
+    static async generate(session: Readonly<Session>, signStrategy: IJWTSigner) {
         return new RefreshToken(await signStrategy.signRefresh(session))
     }
 
-    async verify(signStrategy: IRefreshTokenSigner) {
+    async verify(signStrategy: IJWTSigner) {
         try {
-            return await signStrategy.verifyRefresh(this._value)
-        }
-        catch {
+            return await signStrategy.verifyRefresh(this.v)
+        } catch {
             throw ErrRefreshTokenInvalid
         }
     }
@@ -41,57 +39,59 @@ export class RefreshToken extends ValueObject<string> {
         return new RefreshToken(string)
     }
 
-    asString() {return this._value}
+    asString() {return this.v}
 }
 
 
-export class AccessToken extends ValueObject<string> {
-    static async generate(user: User, signStrategy: IAccessTokenSigner) {
+export class AccessToken {
+    constructor(private v: string) {}
+
+    static async generate(user: Readonly<User>, signStrategy: IJWTSigner) {
         return new AccessToken(await signStrategy.signAccess(user))
     }
 
-    verify(signStrategy: IAccessTokenSigner) {
+    async verify(signStrategy: IJWTSigner) {
         try {
-            return signStrategy.verifyAccess(this._value)
-        }
-        catch {
+            return await signStrategy.verifyAccess(this.v)
+        } catch {
             throw ErrTokenExpired
         }
-        
     }
 
     static from(string: string) {
         return new AccessToken(string)
     }
     
-    asString() {return this._value}
+    asString() {return this.v}
 }
 
 
 @Serializable()
-export class Session extends Entity {
+export default class Session {
     constructor(
+        readonly id: ID<Session>,
         private _userID: ID<User>,
-        private lastActivity: DateTime,
-        private currentToken: RefreshToken | null
-    ) {super()}
+        private _lastActivity: DateTime,
+        private _currentToken: RefreshToken | null
+    ) {}
     
     static new(userID: ID<User>) {
         return new Session(
+            ID.generate(),
             userID,
             DateTime.now(),
             null,
-        ) as Updatable<Session>
+        )
     }
 
     updateToken(newRefresh: RefreshToken) {
-        this.currentToken = newRefresh
+        this._currentToken = newRefresh
     }
 
     updateActivity() {
-        this.lastActivity = DateTime.now()
+        this._lastActivity = DateTime.now()
     }
 
-    get refreshToken() {return this.currentToken}
+    get refreshToken() {return this._currentToken}
     get userID() {return this._userID}
 }

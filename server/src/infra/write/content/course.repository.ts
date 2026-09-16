@@ -1,8 +1,9 @@
-import type { Course, CourseTitle } from "@domain/content/course"
+import type Course from "@domain/content/course"
 import { AbstractRepository } from "../common/abstract_repository"
 import type { ICourseRepository } from "@applications/interfaces/itransaction-manager"
-import type { User } from "@domain/identity/user"
-import type { ID } from "@domain/common/abstractions"
+import type { CourseTitle } from "@domain/content/course"
+import type User from "@domain/identity/user"
+import type { ID } from "@domain/common/value-objects/id"
 
 export class CourseRepository extends AbstractRepository<Course> implements ICourseRepository {
     protected override tablename: string = 'courses'

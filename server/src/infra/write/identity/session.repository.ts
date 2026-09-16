@@ -1,4 +1,4 @@
-import type { Session } from "@domain/identity/session";
+import type Session from "@domain/identity/session";
 import { AbstractRepository } from "../common/abstract_repository";
 import type { ISessionRepository } from "@applications/interfaces/itransaction-manager";
 

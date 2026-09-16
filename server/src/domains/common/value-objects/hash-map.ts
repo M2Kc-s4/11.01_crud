@@ -1,9 +1,11 @@
-import { ValueObject } from "@domain/common/abstractions"
-import { Serializable } from "nucleus-mold"
+import { Json, Serializable } from "nucleus-mold"
 
 
 @Serializable()
-export class HashMap<K, V> extends ValueObject<Record<string, V>> {
+export default class HashMap<K, V> {
+    constructor(
+        private v: Record<number, V>
+    ) {}
     
     static new<K, V>(): HashMap<K, V> {
         return new HashMap({})
@@ -20,36 +22,37 @@ export class HashMap<K, V> extends ValueObject<Record<string, V>> {
     }
 
     public set(key: K, value: V): void {
-        const hash = getHash(key)
-        this._value[hash] = value
+        const hash = hashString(JSON.stringify(key))
+        this.v[hash] = value
     }
 
     public get(key: K): V | undefined {
-        const hash = getHash(key)
-        return this._value[hash]
+        const hash = hashString(JSON.stringify(key))
+        return this.v[hash]
     }
 
     public has(key: K): boolean {
-        const hash = getHash(key)
-        return hash in this._value
+        const hash = hashString(JSON.stringify(key))
+        return hash in this.v
     }
 
     public values(): V[] {
-        return Object.values(this._value)
+        return Object.values(this.v)
     }
 
     public get size(): number {
-        return Object.values(this._value).length
+        return Object.values(this.v).length
     }
 }
 
 
-function getHash(value: any) {
-    if (typeof value !== 'object') return JSON.stringify(value)
+function hashString(string: string) {
+    let hash = 0x811c9dc5
 
-    if (typeof value.toJSON === 'function') {
-        return JSON.stringify(value.toJSON())
+    for (let i = 0x0; i < string.length; i++) {
+        hash ^= string.charCodeAt(i)
+        hash = Math.imul(hash, 0x01000193)
     }
 
-    return JSON.stringify(value.toString())
+    return hash >>> 0
 }

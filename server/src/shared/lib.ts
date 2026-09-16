@@ -1,3 +1,3 @@
 export type Branded<T, Brand> = T & {__brand: Brand}
 
-export type Updatable<T> = Branded<T, "Updatable">
+export const equals = <T>(a: T, b: T) => Bun.deepEquals(a, b, true)

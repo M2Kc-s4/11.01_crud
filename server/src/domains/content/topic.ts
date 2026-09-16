@@ -1,10 +1,10 @@
-import { Entity, ID, ValueObject } from "@domain/common/abstractions"
+import { ID } from "@domain/common/value-objects/id"
 import { DomainError } from "@shared/error"
-import type { Course } from "./course"
-import type { User } from "@domain/identity/user"
-import { Status } from "@domain/common/value-objects/active-status"
-import type { Updatable } from "@shared/lib"
 import { Serializable } from "nucleus-mold"
+import type Course from "./course"
+import type User from "@domain/identity/user"
+import Status from "@domain/common/value-objects/active-status"
+import { equals } from "@shared/lib"
 
 export const ErrTopicArchived = new DomainError("TOPIC_ARCHIVED", "TOPIC_ARCHIVED")
 export const ErrTopicActive = new DomainError("TOPIC_ACTIVE", "TOPIC_ACTIVE")
@@ -13,7 +13,9 @@ export const ErrTopicDescriptionLength = new DomainError("TOPIC_DESCRIPTION_LENG
 
 
 @Serializable()
-export class TopicTitle extends ValueObject<string> {
+export class TopicTitle {
+    constructor(private v: string) {}
+
     static from(title: string) {
         if (title.length < 8 || title.length > 64) throw ErrTopicTitleLength
 
@@ -23,7 +25,9 @@ export class TopicTitle extends ValueObject<string> {
 
 
 @Serializable()
-export class TopicDescription extends ValueObject<string> {
+export class TopicDescription {
+    constructor(private v: string) {}
+
     static from(description: string) {
         if (description.length < 8 || description.length > 128) throw ErrTopicDescriptionLength
 
@@ -33,23 +37,26 @@ export class TopicDescription extends ValueObject<string> {
 
 
 @Serializable()
-export class TopicNumber extends ValueObject<number> {
+export class TopicNumber {
+    constructor(private v: number) {}
+
     static from(number: number) {
         return new TopicNumber(number)
     }
 
-    next() {return new TopicNumber(this._value + 1)}
-    previous() {return new TopicNumber(this._value - 1)}
+    next() { return new TopicNumber(this.v + 1) }
+    previous() { return new TopicNumber(this.v - 1) }
 
-    isFirst() {return this._value === 0}
+    isFirst() { return this.v === 0 }
 
-    asNumber() {return this._value}
+    asNumber() {return this.v}
 }
 
 
 @Serializable()
-export class Topic extends Entity {
+export default class Topic {
     private constructor(
+        readonly id: ID<Topic>,
         private _title: TopicTitle,
         private _description: TopicDescription ,
         private _byCourse: ID<Course>,
@@ -57,11 +64,12 @@ export class Topic extends Entity {
         private _status: Status,
         private _prerequisites: TopicNumber[],
         private _number: TopicNumber
-    ) {super()}
+    ) {}
 
 
     static createWithFreeAccess(byCourse: ID<Course>, title: TopicTitle, description: TopicDescription, createdBy: ID<User>, number: TopicNumber) {
         return new Topic(
+            ID.generate(),
             title,
             description,
             byCourse,
@@ -69,12 +77,13 @@ export class Topic extends Entity {
             Status.Active,
             [],
             number
-        ) as Updatable<Topic>
+        )
     }
 
 
     static createWithAccessAfterPrevious(byCourse: ID<Course>, title: TopicTitle, description: TopicDescription, createdBy: ID<User>, number: TopicNumber) {
         return new Topic(
+            ID.generate(),
             title,
             description,
             byCourse,
@@ -82,19 +91,19 @@ export class Topic extends Entity {
             Status.Active,
             number.isFirst() ? [] : [number.previous()],
             number
-        ) as Updatable<Topic>
+        )
     }
 
 
     archive() {
-        if (this._status.equals(Status.Archived)) throw ErrTopicArchived
+        if (equals(this._status, Status.Archived)) throw ErrTopicArchived
         
         this._status = Status.Archived
     }
 
 
     activate() {
-        if (this._status.equals(Status.Active)) throw ErrTopicActive
+        if (equals(this._status, Status.Active)) throw ErrTopicActive
 
         this._status = Status.Active
     }

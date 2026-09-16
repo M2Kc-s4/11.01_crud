@@ -1,73 +1,77 @@
-import { Entity, ID, ValueObject } from "@domain/common/abstractions"
-import { DateTime } from "@domain/common/value-objects/date-time"
+import DateTime from "@domain/common/value-objects/date-time"
+import { ID } from "@domain/common/value-objects/id"
+import type Topic from "@domain/content/topic"
 import type { TopicNumber } from "@domain/content/topic"
-import type { Topic } from "@domain/content/topic"
-import type { Updatable } from "@shared/lib"
 import { Serializable } from "nucleus-mold"
 
 
 @Serializable()
-export class TopicEnrollmentProgress extends ValueObject<{completed: number, total: number,}> {
+export class TopicEnrollmentProgress {
+    constructor(
+        private _completed: number,
+        private _total: number
+    ) {}
+
     static createNullish() {
-        return new TopicEnrollmentProgress({
-            completed: 0,
-            total: 0,
-        })
+        return new TopicEnrollmentProgress(0, 0)
     }
 
 
     static create(completed: number, total: number) {
-        return new TopicEnrollmentProgress({
-            total, completed
-        })
+        return new TopicEnrollmentProgress(total, completed)
     }
     
 
-    get total() {return this._value.total}
-    get ratio() {return this._value.completed / this._value.total || 0}
+    get total() {return this._total}
+    get ratio() {return this._completed / this._total || 0}
 }
 
 
 @Serializable()
-export class TopicEnrollmentAttempt extends ValueObject<{
-    attemptedAt: DateTime, 
-    completed: number,
-    total: number, 
-    topicID: ID<Topic>,
-    topicNumber: TopicNumber
-}> {
+export class TopicEnrollmentAttempt {
+    constructor(
+        private _attemptedAt: DateTime,
+        private _completedCount: number,
+        private _totalCount: number,
+        private _topicID: ID<Topic>,
+        private _topicNumber: TopicNumber
+    ) {}
+
     static create(completed: number, total: number, topicID: ID<Topic>, topicNumber: TopicNumber) {
-        return new TopicEnrollmentAttempt({
-            attemptedAt: DateTime.now(),
-            completed, total, topicID, topicNumber
-        })
+        return new TopicEnrollmentAttempt(
+            DateTime.now(), completed, 
+            total, topicID, topicNumber
+        )
     }
     
 
-    get completed() {return this._value.completed}
-    get total() {return this._value.total}
-    get ratio() {return this._value.completed / this._value.total || 0}
-    get topicID() {return this._value.topicID}
-    get number() {return this._value.topicNumber}
+    get completed() {return this._completedCount}
+    get total() {return this._totalCount}
+    get ratio() {return this._completedCount / this._totalCount || 0}
+    get topicID() {return this._topicID}
+    get number() {return this._topicNumber}
 }
 
 
 @Serializable()
-export class TopicEnrollment extends Entity {
+export default class TopicEnrollment {
     private static readonly COMPLETION_THRESHOLD = 0.8
 
-
     private constructor(
+        readonly id: ID<TopicEnrollment>,
         private _topicID: ID<Topic>,
-        private _progress: TopicEnrollmentProgress
-    ) { super() }
+        private _progress: TopicEnrollmentProgress,
+        private _number: TopicNumber
+    ) {}
     
 
-    static create(topicID: ID<Topic>) {
+    static create(topicID: ID<Topic>, number: TopicNumber) {
         return new TopicEnrollment(
+            ID.generate(),
             topicID,
             TopicEnrollmentProgress.createNullish(),
-        ) as Updatable<TopicEnrollment>
+            number
+        )
     }
 
 

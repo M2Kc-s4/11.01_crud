@@ -1,14 +1,15 @@
 import type { IRepository } from "@applications/interfaces/itransaction-manager"
-import type { Entity, ID } from "@domain/common/abstractions"
+import type { ID } from "@domain/common/value-objects/id"
 import { sql, type Transaction } from "@m2k-5f/pgtx"
-import type { Updatable } from "@shared/lib"
 import { Json } from "nucleus-mold"
 
 export type Row = {id: string, data: string}
 
 export type RowData = Pick<Row, "data">
 
-export abstract class AbstractRepository<TEnt extends Entity> implements IRepository<TEnt>  {
+type Identificated = {id: ID<unknown>}
+
+export abstract class AbstractRepository<TEnt extends Identificated> implements IRepository<TEnt>  {
     protected abstract tablename: string
 
     constructor(
@@ -16,7 +17,7 @@ export abstract class AbstractRepository<TEnt extends Entity> implements IReposi
     ) {}
 
 
-    protected toRow(agg: Updatable<TEnt>): Row {
+    protected toRow(agg: TEnt): Row {
         return {
             id: agg.id.asString(),
             data: Json.marshall(agg)
@@ -29,7 +30,7 @@ export abstract class AbstractRepository<TEnt extends Entity> implements IReposi
     }
     
 
-    async save(...aggs: Array<Updatable<TEnt>>) {
+    async save(...aggs: Array<TEnt>) {
         const rows = aggs.map(a => this.toRow(a))
 
         rows.length && await this.tx.query
@@ -50,11 +51,11 @@ export abstract class AbstractRepository<TEnt extends Entity> implements IReposi
     }
     
 
-    async getByIDForUpdate(id: ID<TEnt>): Promise<Updatable<TEnt> | null> {
+    async getByIDForUpdate(id: ID<TEnt>) {
         const [row] = await this.tx.query<RowData>
         `select data::text from ${sql.ident(this.tablename)} 
         where id = ${id.asString()} for update;` 
 
-        return row ? this.fromRow(row) as Updatable<TEnt> : null
+        return row ? this.fromRow(row) : null
     }
 }

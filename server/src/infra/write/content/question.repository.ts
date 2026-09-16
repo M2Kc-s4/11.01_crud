@@ -1,9 +1,9 @@
 import type { IQuestionRepository } from "@applications/interfaces/itransaction-manager"
-import { Question } from "@domain/content/question"
-import { AbstractRepository, type Row, type RowData } from "../common/abstract_repository"
-import type { Topic } from "@domain/content/topic"
-import type { ID } from "@domain/common/abstractions"
+import type Question from "@domain/content/question"
 import { sql } from "@m2k-5f/pgtx"
+import { AbstractRepository, type RowData } from "../common/abstract_repository"
+import type Topic from "@domain/content/topic"
+import type { ID } from "@domain/common/value-objects/id"
 
 export class QuestionRepository extends AbstractRepository<Question> implements IQuestionRepository {
     protected override tablename: string = 'questions'

@@ -1,7 +1,7 @@
 import type { ITransactionManager } from "@applications/interfaces/itransaction-manager"
-import { ID } from "@domain/common/abstractions"
+import { ID } from "@domain/common/value-objects/id"
 import TelegramLink from "@domain/common/value-objects/telegram-link"
-import { User, UserHashedPassword, UserRawPassword, UserRole, UserUsername, type PasswordHashStrategy } from "@domain/identity/user"
+import User, { UserHashedPassword, UserRawPassword, UserRole, UserUsername, type PasswordHashStrategy } from "@domain/identity/user"
 import { DomainError, ErrNotFound } from "@shared/error"
 
 export type RegisterUserCMD = {
@@ -27,16 +27,21 @@ export class IdentityService {
 
     register(cmd: RegisterUserCMD) {
         return this.txmanager.begin(async uow => {
-            if (await uow.users.checkNameExists(UserUsername.from(cmd.name))) 
+            const exists = await uow.users.checkNameExists(
+                UserUsername.from(cmd.name)
+            )
+
+            if (exists) {
                 throw ErrUserNameExists
+            }
+            
+            const hash = await UserRawPassword.from(cmd.password)
+                .hash(this.hashStrategy)
             
             const user = User.register(
                 UserUsername.from(cmd.name),
                 TelegramLink.from(cmd.telegramLink),
-                UserHashedPassword.from(
-                    await UserRawPassword.from(cmd.password)
-                        .hash(this.hashStrategy)
-                )
+                UserHashedPassword.from(hash)
             )
 
             await uow.users.save(user)

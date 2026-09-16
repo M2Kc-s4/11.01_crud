@@ -2,14 +2,15 @@ import Elysia from "elysia";
 import swagger from '@elysiajs/swagger'
 import { contentRoutes } from "@presentation/contexts/content";
 import { identityRoutes } from "@presentation/contexts/identity";
-import {cors} from "@elysiajs/cors"
+import cors from "@elysiajs/cors"
 import { learningRoutes } from "@presentation/contexts/learning";
 import { AppError } from "@shared/error";
 
 const app = new Elysia({})
-.use(cors({}))
 
-.onError(({code, error, set }) => {
+app.use(cors())
+
+app.onError(({code, error, set }) => {
     console.log(error)
 
     if (code === 'VALIDATION') {
@@ -32,7 +33,7 @@ const app = new Elysia({})
     }  
 })
 
-.use(
+app.use(
     swagger({
         provider: 'swagger-ui',
         documentation: {
@@ -49,10 +50,18 @@ const app = new Elysia({})
         }
     })
 )
-.get('/ping', () => 'pong')
-.use(identityRoutes)
-.use(contentRoutes)
-.use(learningRoutes)
-.listen({port: 8000, reusePort: true})
 
-console.log("Bun served")
+app.get('/ping', () => 'pong')
+    .use(identityRoutes)
+    .use(contentRoutes)
+    .use(learningRoutes)
+
+app.listen({port: 8000, reusePort: true})
+
+console.log(`
+     _______ __
+    / ____(_) /_  ___  _____
+   / /_  / / __ \\/ _ \\/ ___/
+  / __/ / / /_/ /  __/ /
+ /_/   /_/_.___/\\___/_/
+`)

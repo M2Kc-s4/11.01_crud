@@ -1,9 +1,9 @@
 import type { ITopicRepository } from "@applications/interfaces/itransaction-manager"
-import type { Topic } from "@domain/content/topic"
 import { AbstractRepository, type Row, type RowData } from "../common/abstract_repository"
-import type { Course } from "@domain/content/course"
-import type { ID } from "@domain/common/abstractions"
 import { sql } from "@m2k-5f/pgtx"
+import type Topic from "@domain/content/topic"
+import type Course from "@domain/content/course"
+import type { ID } from "@domain/common/value-objects/id"
 
 export class TopicRepository extends AbstractRepository<Topic> implements ITopicRepository {
     protected override tablename: string = 'topics'

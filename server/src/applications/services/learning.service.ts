@@ -1,10 +1,8 @@
 import type { ITransactionManager } from "@applications/interfaces/itransaction-manager";
-import { ID } from "@domain/common/abstractions";
-import { HashMap } from "@domain/common/value-objects/hash-map";
-import type { Course } from "@domain/content/course";
-import type { Answer, Question } from "@domain/content/question";
-import type { Topic } from "@domain/content/topic";
-import type { User } from "@domain/identity/user";
+import HashMap from "@domain/common/value-objects/hash-map";
+import { ID } from "@domain/common/value-objects/id";
+import type { Answer } from "@domain/content/question";
+import type Question from "@domain/content/question";
 import { Enrollment } from "@domain/learning/course-enrollment";
 import { TopicEnrollmentAttempt } from "@domain/learning/topic-enrollment";
 import { DomainError, ErrNotFound } from "@shared/error";
@@ -45,10 +43,14 @@ export default class LearningService {
 
     enrollCourse(cmd: EnrollCourseCMD) {
         return this.txmanager.begin(async uow => {
-            if (await uow.enrolls.isUserEnrolled(
+            const enrolled = await uow.enrolls.isUserEnrolled(
                 ID.from(cmd.uid), 
                 ID.from(cmd.courseID)
-            )) throw ErrAlreadyEnroll
+            )
+            
+            if (enrolled) {
+                throw ErrAlreadyEnroll
+            }
 
             const enroll = Enrollment.create(
                 ID.from(cmd.uid),

@@ -1,6 +1,7 @@
 import type { ITransactionManager } from "@applications/interfaces/itransaction-manager";
-import { AccessToken, ErrRefreshTokenInvalid, ErrSessionNotFound, RefreshToken, Session, type IAccessTokenSigner, type IRefreshTokenSigner } from "@domain/identity/session";
+import Session, { AccessToken, ErrRefreshTokenInvalid, ErrSessionNotFound, RefreshToken, type IJWTSigner } from "@domain/identity/session";
 import { ErrAuthorizationFailed, UserRawPassword, UserUsername, type PasswordHashStrategy } from "@domain/identity/user";
+import { equals } from "@shared/lib";
 
 
 type AuthorizeCMD = {
@@ -21,7 +22,7 @@ export class AuthService {
     constructor (
         private readonly txmanager: ITransactionManager,
         private readonly passwordHashStrategy: PasswordHashStrategy,
-        private readonly tokenSigner: IRefreshTokenSigner & IAccessTokenSigner
+        private readonly tokenSigner: IJWTSigner
     ) {}
 
 
@@ -40,13 +41,17 @@ export class AuthService {
 
             const session = Session.new(user.id)
 
-            const refreshToken = await RefreshToken.generate(session, this.tokenSigner)
+            const refreshToken = await RefreshToken.generate(
+                session, this.tokenSigner
+            )
 
             session.updateToken(refreshToken)
 
             await uow.sessions.save(session)
 
-            const accessToken = await AccessToken.generate(user, this.tokenSigner)
+            const accessToken = await AccessToken.generate(
+                user, this.tokenSigner
+            )
 
             return {
                 refreshToken: refreshToken.asString(), 
@@ -64,21 +69,33 @@ export class AuthService {
         return this.txmanager.begin(async uow => {
             const session = await uow.sessions.getByIDForUpdate(sessionID)
             
-            if (!session) throw ErrSessionNotFound
+            if (!session) {
+                throw ErrSessionNotFound
+            }
 
-            if (!session.refreshToken?.equals(RefreshToken.from(cmd.refreshToken))) 
+            if (!session.refreshToken) throw ErrRefreshTokenInvalid
+
+            if (!equals(session.refreshToken, RefreshToken.from(cmd.refreshToken))) {
                 throw ErrRefreshTokenInvalid
+            }
 
             session.updateActivity()
 
-            const refreshToken = await RefreshToken.generate(session, this.tokenSigner)
+            const refreshToken = await RefreshToken.generate(
+                session, this.tokenSigner
+            )
 
             session.updateToken(refreshToken)
 
             const user = await uow.users.getByID(uid)
-            if (!user) throw ErrSessionNotFound
 
-            const accessToken = await AccessToken.generate(user, this.tokenSigner)
+            if (!user) {
+                throw ErrSessionNotFound
+            }
+
+            const accessToken = await AccessToken.generate(
+                user, this.tokenSigner
+            )
 
             await uow.sessions.save(session)
 
