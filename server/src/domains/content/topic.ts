@@ -55,7 +55,7 @@ export class TopicNumber {
 
 @Serializable()
 export default class Topic {
-    private constructor(
+    constructor(
         readonly id: ID<Topic>,
         private _title: TopicTitle,
         private _description: TopicDescription ,

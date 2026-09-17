@@ -1,11 +1,11 @@
 import type { PasswordHashStrategy } from "@domain/identity/user"
 
 export class BCryptHashStrategy implements PasswordHashStrategy {
-    async hash(raw: string) {
-        return await Bun.password.hash(raw)
+    hash(raw: string) {
+        return Bun.password.hash(raw)
     }
 
-    async compare(raw: string, hash: string) {
-        return await Bun.password.verify(raw, hash)
+    compare(raw: string, hash: string) {
+        return Bun.password.verify(raw, hash)
     }
 }

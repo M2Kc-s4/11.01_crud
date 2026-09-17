@@ -57,7 +57,7 @@ export class TopicEnrollmentAttempt {
 export default class TopicEnrollment {
     private static readonly COMPLETION_THRESHOLD = 0.8
 
-    private constructor(
+    constructor(
         readonly id: ID<TopicEnrollment>,
         private _topicID: ID<Topic>,
         private _progress: TopicEnrollmentProgress,

@@ -6,7 +6,7 @@ import cors from "@elysiajs/cors"
 import { learningRoutes } from "@presentation/contexts/learning";
 import { AppError } from "@shared/error";
 
-const app = new Elysia({})
+const app = new Elysia()
 
 app.use(cors())
 
@@ -16,13 +16,19 @@ app.onError(({code, error, set }) => {
     if (code === 'VALIDATION') {
         set.status = 422
 
-        return {code: "ERR_VALIDATION", message: error.all.map(err => {return `${err.path}:  ${err.message}`})}
+        return {
+            code: "ERR_VALIDATION", 
+            message: error.all.map(err => {return `${err.path}:  ${err.message}`})
+        }
     }
 
     if (!(error instanceof AppError)) {
         set.status = 500
 
-        return { code: "INTERNAL", message: "internal error" }
+        return { 
+            code: "INTERNAL", 
+            message: "internal error" 
+        }
     }
 
     set.status = error.status

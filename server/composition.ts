@@ -29,7 +29,7 @@ const queriesPool = new Pool({
     user: env.PG_USER,
     database: env.PG_DB,
     max: 10,
-    logLevel: 'query'
+    logLevel: 'notice'
 })
 
 const txm = new TransactionManager(persistensePool)

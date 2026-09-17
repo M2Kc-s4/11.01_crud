@@ -40,7 +40,7 @@ export class CorrectStatus {
 
 @Serializable()
 export class Answer {
-    private constructor(
+    constructor(
         readonly id: ID<Answer>,
         private _text: AnswerText,
         private _correctness: CorrectStatus
@@ -68,7 +68,7 @@ export class QuestionText {
 
 @Serializable()
 export default class Question {
-    private constructor(
+    constructor(
         readonly id: ID<Question>,
         private _text: QuestionText,
         private _byTopic: ID<Topic>,

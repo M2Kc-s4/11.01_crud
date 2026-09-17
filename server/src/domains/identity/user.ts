@@ -12,9 +12,7 @@ export const ErrAuthorizationFailed = new DomainError("AUTHORIZATION_FAILED", "A
 
 @Serializable()
 export class UserUsername {
-    constructor(
-        private v: string
-    ) {}
+    constructor(private v: string) {}
 
     static from(username: string) {
         if (username.length < 8 || username.length > 32) throw ErrUsernameLength
@@ -32,9 +30,7 @@ export interface PasswordHashStrategy {
 
 @Serializable()
 export class UserRawPassword {
-    constructor(
-        private v: string
-    ) {}
+    constructor(private v: string) {}
 
     static from(password: string) {
         if (password.length < 8) throw ErrPasswordLength
@@ -52,9 +48,7 @@ export class UserRawPassword {
 
 @Serializable()
 export class UserHashedPassword {
-    constructor(
-        private v: string
-    ) {}
+    constructor(private v: string) {}
 
     static from(hash: string) {
         return new UserHashedPassword(hash)
@@ -74,9 +68,7 @@ export type UserRoleType =
 
 @Serializable()
 export class UserRole {
-    constructor(
-        private v: UserRoleType
-    ) {}
+    constructor(private v: UserRoleType) {}
 
     static get Teacher() { return new UserRole("Teacher") }
 

@@ -28,7 +28,7 @@ export class EnrollmentProgress {
 
 @Serializable()
 export class Enrollment {
-    private constructor(
+    constructor(
         readonly id: ID<Enrollment>,
         private _userID: ID<User>,
         private _courseID: ID<Course>,
