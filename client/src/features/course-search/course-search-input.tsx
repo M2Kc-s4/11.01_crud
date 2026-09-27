@@ -1,6 +1,4 @@
-// features/course-search/ui/course-search.tsx
 import { useState, useEffect, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/shared/ui/input';
 import { Search, X } from 'lucide-react';
@@ -9,6 +7,7 @@ import { QueryKeys } from '@/shared/lib/query-keys';
 import { CourseSearchResult } from './course-search-result';
 import { Spinner } from '@/shared/ui/spinner';
 import { Routes } from '@/shared/lib/routes-constants';
+import { useQuery } from '@/shared/lib/compose';
 
 export const CourseSearch = () => {
     const [query, setQuery] = useState('')
@@ -17,8 +16,8 @@ export const CourseSearch = () => {
     const containerRef = useRef<HTMLDivElement>(null)
 
     const { data: courses, isLoading } = useQuery({
-        queryKey: QueryKeys.courseSearch(query),
-        queryFn: () => contentApi.searchCourses(query),
+        tags: [QueryKeys.courseSearch(query)],
+        query: () => contentApi.searchCourses(query),
         enabled: query.length >= 2,
     })
 

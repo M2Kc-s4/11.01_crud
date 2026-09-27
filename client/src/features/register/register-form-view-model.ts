@@ -1,11 +1,9 @@
-import { useMutation } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
-import type { ApiError } from "@/shared/errors"
 import { userApi } from "@/entities/identity/api"
 import z from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import type { UserRead } from "@contracts"
+import { useMutation } from "@/shared/lib/compose"
 
 
 const registerForm = z.object({
@@ -32,17 +30,14 @@ const registerForm = z.object({
 })
 
 
-type RegisterForm = z.infer<typeof registerForm>
-
-
 export const useRegisterFormMV = () => {
     const {control, formState: {errors}} = useForm({
         resolver: zodResolver(registerForm)
     })
 
 
-    const {isPending, mutate} = useMutation<UserRead, ApiError, RegisterForm>({
-        mutationFn: ({passwordRepeat, ...data}) =>
+    const {isPending, mutate} = useMutation({
+        mutation: ({passwordRepeat, ...data}) =>
             userApi.register(data),
 
         onSuccess: user =>

@@ -7,12 +7,10 @@ export const ErrTelegramLinkInvalid = new DomainError("TELEGRAM_LINK_INVALID", "
 
 @Serializable()
 export default class TelegramLink  {
-    constructor(
-        private v: string
-    ) {}
+    constructor(private v: string) {}
 
     static from(telegramLink: string) {
-        if (!telegramLink.includes("https://t.me/")) throw ErrTelegramLinkInvalid
+        // if (!telegramLink.includes("https://t.me/")) throw ErrTelegramLinkInvalid
 
         return new this(telegramLink)
     }

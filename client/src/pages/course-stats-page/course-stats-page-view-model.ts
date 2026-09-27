@@ -1,9 +1,8 @@
 import { contentApi } from "@/entities/content/api"
 import { learningApi } from "@/entities/learning/api"
-import { composeKeys } from "@/shared/lib/composed-key"
+import { useQuery } from "@/shared/lib/compose"
 import { QueryKeys } from "@/shared/lib/query-keys"
 import type { TopicEnrollmentRead } from "@contracts"
-import { useQuery } from "@tanstack/react-query"
 import { Bind } from "fluent-future"
 
 type CourseStatsPageVMProps = {
@@ -24,10 +23,10 @@ export type StudentStatsType = {
 
 export const useCourseStatsPageVM = ({ courseID }: CourseStatsPageVMProps) => {
     const { data, error } = useQuery({
-        queryKey: composeKeys(
+        tags: [
             QueryKeys.course(courseID)
-        ),
-        queryFn: () =>
+        ],
+        query: () =>
             Bind({
                 course: contentApi.getCourseByID(courseID),
                 enrollments: learningApi.getEnrollmentsByCourse(courseID)

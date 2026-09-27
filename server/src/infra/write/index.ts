@@ -22,7 +22,7 @@ export class TransactionManager implements ITransactionManager {
                 new EnrollRepository(tx),
                 new SessionRepository(tx)
             )
-            
+    
             return await func(uow) 
         })
     }

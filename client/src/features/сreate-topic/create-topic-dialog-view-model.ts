@@ -1,11 +1,11 @@
 import { contentApi } from "@/entities/content/api";
 import type { ApiError } from "@/shared/errors";
 import { QueryKeys } from "@/shared/lib/query-keys";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import {z} from 'zod'
 import {zodResolver} from '@hookform/resolvers/zod'
+import { useMutation } from "@/shared/lib/compose";
 
 
 type CreateTopicDialogVMProps = {
@@ -25,9 +25,7 @@ const formShema = z.object({
 })
 
 
-export const useCreateTopicDialogVM = ({courseID, onOpenChange}: CreateTopicDialogVMProps) => {
-    const queryClient = useQueryClient()
-    
+export const useCreateTopicDialogVM = ({courseID, onOpenChange}: CreateTopicDialogVMProps) => {    
     const {
         control,
         formState: {errors},
@@ -36,14 +34,10 @@ export const useCreateTopicDialogVM = ({courseID, onOpenChange}: CreateTopicDial
 
 
     const { mutate, isPending } = useMutation({
-        mutationFn: contentApi.createTopic,
+        mutation: contentApi.createTopic,
 
         onSuccess: ()=> {
             toast.success('Тема успешно создана')
-            queryClient.invalidatePartial(
-                QueryKeys.courseTopics(courseID),
-                QueryKeys.course(courseID)
-            )
             onOpenChange(false)
             reset()
         },
@@ -51,6 +45,10 @@ export const useCreateTopicDialogVM = ({courseID, onOpenChange}: CreateTopicDial
             toast.error('Ошибка при создании темы', { description: error.message })
             control.setError('root', { message: error.message })
         },
+        invalidates: [
+            QueryKeys.courseTopics(courseID),
+            QueryKeys.course(courseID)
+        ]
     })
 
 

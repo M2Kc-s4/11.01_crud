@@ -18,7 +18,7 @@ export class TopicEnrollmentProgress {
 
 
     static create(completed: number, total: number) {
-        return new TopicEnrollmentProgress(total, completed)
+        return new TopicEnrollmentProgress(completed, total)
     }
     
 

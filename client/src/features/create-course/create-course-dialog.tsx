@@ -1,4 +1,3 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { contentApi } from '@/entities/content/api';
 import { Button } from '@/shared/ui/button';
 import {
@@ -16,6 +15,7 @@ import { useForm } from 'react-hook-form';
 import type { ApiError } from '@/shared/errors';
 import { ErrorMessage } from '@/shared/ui/form-error-message';
 import { QueryKeys } from '@/shared/lib/query-keys';
+import { useMutation } from '@/shared/lib/compose';
 
 type CreateCourseDialogProps = {
     open: boolean,
@@ -30,23 +30,20 @@ type CreateCourseFormType = {
 
 
 export const useCreateCoursesDialogVM = ({onOpenChange}: {onOpenChange: (open: boolean)=> void})=> {
-    const client = useQueryClient()
-
-
     const {register, handleSubmit, formState: {errors}, setError} = useForm<CreateCourseFormType>()
 
 
     const {mutate, isPending} = useMutation({
-        mutationFn: contentApi.createCourse,
+        mutation: contentApi.createCourse,
         onSuccess: () => {
             toast('Курс успешно создан')
-            client.invalidatePartial(QueryKeys.coursesMe)
             onOpenChange(false)
         },
         onError: (error: ApiError) => {
             toast.error("Ошибка при создании курса", {description: error.message})
             setError('root', {message: error.message})
-        }
+        },
+        invalidates: [QueryKeys.coursesMe]
     })
 
 

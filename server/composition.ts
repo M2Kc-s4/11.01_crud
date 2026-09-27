@@ -1,5 +1,4 @@
 import { Pool } from "@m2k-5f/pgtx";
-import "crypto"
 import { IdentityService } from "@applications/services/identity.service";
 import { BCryptHashStrategy } from "./src/infra/security/bcrypt-hash-strategy";
 import { CourseManagementService } from "@applications/services/content.manage.service";

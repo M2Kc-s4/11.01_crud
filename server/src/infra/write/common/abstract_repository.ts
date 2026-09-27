@@ -1,6 +1,6 @@
 import type { IRepository } from "@applications/interfaces/itransaction-manager"
 import type { ID } from "@domain/common/value-objects/id"
-import { sql, type Transaction } from "@m2k-5f/pgtx"
+import { Connection, sql } from "@m2k-5f/pgtx"
 import { Json } from "nucleus-mold"
 
 export type Row = {id: string, data: string}
@@ -13,7 +13,7 @@ export abstract class AbstractRepository<TEnt extends Identificated> implements 
     protected abstract tablename: string
 
     constructor(
-        readonly tx: Transaction,
+        readonly tx: Connection,
     ) {}
 
 

@@ -1,14 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { contentApi } from '@/entities/content/api';
 import { learningApi } from '@/entities/learning/api';
 import { QueryKeys } from '@/shared/lib/query-keys';
-import type { ApiError } from '@/shared/errors';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Bind } from 'fluent-future';
-import { composeKeys } from '@/shared/lib/composed-key';
 import { useGuardedCurrentUser } from '@/entities/identity/providers/current-user-provider';
 import { Routes } from '@/shared/lib/routes-constants';
+import { useMutation, useQuery } from '@/shared/lib/compose';
 
 type CoursePageVMProps = {
     courseID: string
@@ -17,17 +15,16 @@ type CoursePageVMProps = {
 
 export const useCoursePageVM = ({ courseID }: CoursePageVMProps) => {
     const navigate = useNavigate()
-    const client = useQueryClient()
     const {user} = useGuardedCurrentUser()
 
 
     const {data, error} = useQuery({
-        queryKey: composeKeys(
+        tags: [
             QueryKeys.enrollmentByCourse(courseID),
             QueryKeys.course(courseID),
             QueryKeys.courseTopics(courseID)
-        ),
-        queryFn: () => Bind({
+        ],
+        query: () => Bind({
             course: contentApi.getCourseByID(courseID),
             topics: contentApi.getTopicsByCourse(courseID),
             enrollment: learningApi.getUserEnrollmentByCourse(courseID, user.id)
@@ -35,26 +32,26 @@ export const useCoursePageVM = ({ courseID }: CoursePageVMProps) => {
     })
 
 
-    const {mutate: onCourseEnroll, isPending} = useMutation({
-        mutationFn: learningApi.enrollCourse,
-        onError: (err: ApiError) => toast(err.message),
+    const {mutate, isPending} = useMutation({
+        mutation: learningApi.enrollCourse,
+        onError: err => toast(err.message),
         onSuccess: enrollment => {
-            client.invalidatePartial(
-                QueryKeys.enrollmentsMe,
-                QueryKeys.enrollmentByCourse(courseID)
-            ),
-
             toast.success('Вы подписались на курс')
             navigate(Routes.enrollmentPage(enrollment.id))
-        }
+        },
+        invalidates: courseID => [
+            QueryKeys.enrollmentsMe,
+            QueryKeys.enrollmentByCourse(courseID)
+        ]
     })
-
 
     const onEnrollmentSelect = (enrollmentID: string) => () => navigate(Routes.enrollmentPage(enrollmentID))
 
+    const onCourseEnroll = () => mutate(courseID)
+
 
     return {
-        onCourseEnroll: () => onCourseEnroll(courseID),
+        onCourseEnroll,
         isPending,
         data,
         error,

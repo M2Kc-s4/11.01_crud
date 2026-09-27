@@ -1,44 +1,40 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { learningApi } from '@/entities/learning/api';
 import { QueryKeys } from '@/shared/lib/query-keys';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { composeKeys } from '@/shared/lib/composed-key';
 import { Routes } from '@/shared/lib/routes-constants';
+import { useMutation, useQuery } from '@/shared/lib/compose';
 
 type TopicPassingPageVMProps = {
     topicID: string
 }
 
 export const useTopicPassingPageVM = ({ topicID }: TopicPassingPageVMProps) => {
-    const navigate = useNavigate()
-    const client = useQueryClient()
-    
+    const navigate = useNavigate()    
 
     const [answeredQuestions, setAnsweredQuestions] = useState<Record<string, string[]>>({})
 
     
     const { data: questionsToAnswer, error } = useQuery({
-        queryKey: composeKeys(QueryKeys.topicQuestionsToPass(topicID)),
-        queryFn: () => learningApi.startTopic(topicID),
+        tags: [QueryKeys.topicQuestionsToPass(topicID)],
+        query: () => learningApi.startTopic(topicID),
     })
 
     
     const { mutate: completeTopic, isPending: isSubmitting } = useMutation({
-        mutationFn: learningApi.completeTopic,
+        mutation: learningApi.completeTopic,
         onSuccess: (enrollment) => {
-            client.invalidatePartial(
-                QueryKeys.enrollment(enrollment.id),
-                QueryKeys.enrollmentTopics(enrollment.id),
-                QueryKeys.enrollmentsMe
-            )
-
             navigate(Routes.enrollmentPage(enrollment.id))
         },
         onError: () => {
             toast.error('Не удалось отправить ответы')
         },
+        invalidates: enrollment => [
+            QueryKeys.enrollment(enrollment.id),
+            QueryKeys.enrollmentTopics(enrollment.id),
+            QueryKeys.enrollmentsMe
+        ]
     })
 
 

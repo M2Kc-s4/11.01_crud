@@ -72,20 +72,26 @@ export default class LearningService {
                 ID.from(cmd.topicID)
             )
 
-            if (!topic) throw ErrNotFound
+            if (!topic) {
+                throw ErrNotFound
+            }
 
-            if (await uow.questions.countByTopic(topic.id) === 0) 
+            if (await uow.questions.countByTopic(topic.id) === 0) {
                 throw ErrTopicAreEmpty
+            }
 
             const enroll = await uow.enrolls.getByUserAndCourseForUpdate(
                 ID.from(cmd.uid), 
                 topic.courseID
             )
 
-            if(!enroll) throw ErrNotEnrolled
+            if(!enroll) {
+                throw ErrNotEnrolled
+            }
 
-            if (!enroll.canStartTopic(topic.number, topic.prerequisites)) 
+            if (!enroll.canStartTopic(topic.number, topic.prerequisites)) {
                 throw ErrCanNotStart
+            }
 
             return {
                 topicID: topic.id.asString(),
@@ -101,16 +107,20 @@ export default class LearningService {
                 ID.from(cmd.topicID)
             )
 
-            if (!topic) throw ErrNotFound
+            if (!topic) {
+                throw ErrNotFound
+            }
 
             const enroll = await uow.enrolls.getByUserAndCourseForUpdate(
                 ID.from(cmd.uid), 
                 topic.courseID
             )
 
-            if(!enroll) throw ErrNotEnrolled
+            if (!enroll) {
+                throw ErrNotEnrolled
+            }
 
-            const questions = await uow.questions.listByTopic(topic.id)
+            const questions = await uow.questions.listByTopic(topic.id)            
 
             const questionAnswers = HashMap.fromEntries(
                 cmd.questionAnswers.map((q => 
@@ -118,13 +128,14 @@ export default class LearningService {
                 ))
             )
 
-            if (questionAnswers.size !== questions.length) 
+            if (questionAnswers.size !== questions.length) {
                 throw ErrQuestionCountMismatch
+            }
 
             const completedQuestionCount = questions
                 .filter(question => 
                     question.checkAnswers(
-                        questionAnswers.get(question.id) || []
+                        questionAnswers.get(question.id) ?? []
                     )
                 )
                 .length

@@ -32,8 +32,6 @@ import { useClipboard } from "@/shared/hooks/useClipboard";
 import { sorted } from "@/shared/lib/utils";
 
 
-
-
 export const EnrollmentPage = () => {
     const { enrollmentID } = useParams()
     const copy = useClipboard()

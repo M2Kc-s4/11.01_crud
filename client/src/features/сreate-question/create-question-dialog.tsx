@@ -1,7 +1,6 @@
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { contentApi, type CreateQuestionDTO } from '@/entities/content/api';
+import { contentApi } from '@/entities/content/api';
 import {
     Dialog,
     DialogContent,
@@ -16,7 +15,7 @@ import { QueryKeys } from '@/shared/lib/query-keys';
 import { ErrorMessage } from '@/shared/ui/form-error-message';
 import { zodResolver } from '@hookform/resolvers/zod';
 import z from 'zod';
-import type { ApiError } from '@/shared/errors';
+import { useMutation } from '@/shared/lib/compose';
 
 
 const formShema = z.object({
@@ -46,8 +45,6 @@ type CreateQuestionDialogProps = {
 
 
 const useCreateQuestionDialogVM = ({topicID, onOpenChange}: CreateQuestionDialogVMProps) => {
-    const client = useQueryClient()
-
     const { control, formState: { errors } } = useForm({
         resolver: zodResolver(formShema),
         defaultValues: {
@@ -63,14 +60,10 @@ const useCreateQuestionDialogVM = ({topicID, onOpenChange}: CreateQuestionDialog
     })
 
 
-    const { mutate, isPending } = useMutation<void, ApiError, CreateQuestionDTO>({
-        mutationFn: contentApi.createQuestion,
+    const { mutate, isPending } = useMutation({
+        mutation: contentApi.createQuestion,
         onSuccess: () => {
             toast.success('Вопрос создан')
-            client.invalidatePartial(
-                QueryKeys.topicQuestions(topicID),
-                QueryKeys.topic(topicID)
-            )
 
             control._reset()
             onOpenChange(false)
@@ -78,6 +71,10 @@ const useCreateQuestionDialogVM = ({topicID, onOpenChange}: CreateQuestionDialog
         onError: error => {
             toast.error('Ошибка', { description: error.message })
         },
+        invalidates: [
+            QueryKeys.topicQuestions(topicID),
+            QueryKeys.topic(topicID)
+        ]
     })
 
 

@@ -1,8 +1,7 @@
 import { contentApi } from "@/entities/content/api"
-import { composeKeys } from "@/shared/lib/composed-key"
+import { useMutation, useQuery } from "@/shared/lib/compose"
 import { QueryKeys } from "@/shared/lib/query-keys"
 import { Routes } from "@/shared/lib/routes-constants"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Bind } from "fluent-future"
 import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
@@ -14,38 +13,38 @@ type CourseTopicsPageVM = {
 
 
 export const useCourseEditPageVM = ({courseID}: CourseTopicsPageVM) => {
-    const client = useQueryClient()
     const navigate = useNavigate()
 
     
     const { data, error } = useQuery({
-        queryFn: () => Bind({
+        query: () => Bind({
             topics: contentApi.getTopicsByCourse(courseID),
             course: contentApi.getCourseByID(courseID)
         }),
-        queryKey: composeKeys(
+        tags: [
             QueryKeys.courseTopics(courseID),
             QueryKeys.course(courseID)
-        ),
+        ],
     })
 
 
     const {mutate: topicActivateMutate} = useMutation({
-        mutationFn: contentApi.activateTopic,
+        mutation: contentApi.activateTopic,
         onSuccess() {
-            client.invalidatePartial(QueryKeys.courseTopics(courseID))
             toast("Успешно активировано")
-        }
+        },
+        invalidates: [QueryKeys.courseTopics(courseID)]
     })
 
 
     const {mutate: topicArchiveMutate} = useMutation({
-        mutationFn: contentApi.archiveTopic,
+        mutation: contentApi.archiveTopic,
         onSuccess() {
-            client.invalidatePartial(QueryKeys.courseTopics(courseID))
             toast('Усешно архивировано')
-        }
+        },
+        invalidates: [QueryKeys.courseTopics(courseID)]
     })
+
 
     const onTopicActivate = (topicID: string) => () => topicActivateMutate(topicID)
 
@@ -55,6 +54,7 @@ export const useCourseEditPageVM = ({courseID}: CourseTopicsPageVM) => {
 
     const onCourseStatsSelect = () => navigate(Routes.courseStaticticsPage(courseID))
 
+    
     return {
         data, 
         error,

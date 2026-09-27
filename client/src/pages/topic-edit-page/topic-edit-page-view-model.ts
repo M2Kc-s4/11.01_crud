@@ -1,8 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
 import { contentApi } from '@/entities/content/api';
 import { QueryKeys } from '@/shared/lib/query-keys';
-import { composeKeys } from '@/shared/lib/composed-key';
 import { Bind } from 'fluent-future';
+import { useQuery } from '@/shared/lib/compose';
 
 type TopicQuestionsPageVMPropsType = {
     topicID: string
@@ -11,11 +10,11 @@ type TopicQuestionsPageVMPropsType = {
 export const useTopicEditPageVM = ({topicID}: TopicQuestionsPageVMPropsType) => {
 
     const {data, error} = useQuery({
-        queryKey: composeKeys(
+        tags: [
             QueryKeys.topic(topicID),
             QueryKeys.topicQuestions(topicID)
-        ),
-        queryFn: () => Bind({
+        ],
+        query: () => Bind({
             topic: contentApi.getTopicByID(topicID),
             questions: contentApi.getQuestionsByTopic(topicID)
         })
