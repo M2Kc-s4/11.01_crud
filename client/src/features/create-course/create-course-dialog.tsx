@@ -14,7 +14,6 @@ import { Textarea } from '@/shared/ui/textarea';
 import { useForm } from 'react-hook-form';
 import type { ApiError } from '@/shared/errors';
 import { ErrorMessage } from '@/shared/ui/form-error-message';
-import { QueryKeys } from '@/shared/lib/query-keys';
 import { useMutation } from '@/shared/lib/compose';
 
 type CreateCourseDialogProps = {
@@ -32,9 +31,9 @@ type CreateCourseFormType = {
 export const useCreateCoursesDialogVM = ({onOpenChange}: {onOpenChange: (open: boolean)=> void})=> {
     const {register, handleSubmit, formState: {errors}, setError} = useForm<CreateCourseFormType>()
 
-
     const {mutate, isPending} = useMutation({
         mutation: contentApi.createCourse,
+        refetches: 'my-courses',
         onSuccess: () => {
             toast('Курс успешно создан')
             onOpenChange(false)
@@ -43,7 +42,6 @@ export const useCreateCoursesDialogVM = ({onOpenChange}: {onOpenChange: (open: b
             toast.error("Ошибка при создании курса", {description: error.message})
             setError('root', {message: error.message})
         },
-        invalidates: [QueryKeys.coursesMe]
     })
 
 

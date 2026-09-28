@@ -11,7 +11,6 @@ import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Checkbox } from '@/shared/ui/checkbox';
 import { Plus, Trash2, CheckCircle } from 'lucide-react';
-import { QueryKeys } from '@/shared/lib/query-keys';
 import { ErrorMessage } from '@/shared/ui/form-error-message';
 import { zodResolver } from '@hookform/resolvers/zod';
 import z from 'zod';
@@ -62,19 +61,14 @@ const useCreateQuestionDialogVM = ({topicID, onOpenChange}: CreateQuestionDialog
 
     const { mutate, isPending } = useMutation({
         mutation: contentApi.createQuestion,
+        refetches: 'editable-topic',
         onSuccess: () => {
             toast.success('Вопрос создан')
 
             control._reset()
             onOpenChange(false)
         },
-        onError: error => {
-            toast.error('Ошибка', { description: error.message })
-        },
-        invalidates: [
-            QueryKeys.topicQuestions(topicID),
-            QueryKeys.topic(topicID)
-        ]
+        onError: error => toast.error('Ошибка', { description: error.message }),
     })
 
 

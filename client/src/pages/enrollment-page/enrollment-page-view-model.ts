@@ -1,7 +1,6 @@
 import { contentApi } from "@/entities/content/api"
 import { learningApi } from "@/entities/learning/api"
 import { useQuery } from "@/shared/lib/compose"
-import { QueryKeys } from "@/shared/lib/query-keys"
 import { Routes } from "@/shared/lib/routes-constants"
 import { Bind } from "fluent-future"
 import { useNavigate } from "react-router-dom"
@@ -16,11 +15,6 @@ export const useEnrollmentPageVM = ({enrollmentID}: EnrollmentPageVMProps) => {
     const navigate = useNavigate()
 
     const {data, error} = useQuery({
-        tags: [
-            QueryKeys.coursesMe,
-            QueryKeys.enrollmentTopics(enrollmentID),
-            QueryKeys.enrollment(enrollmentID)
-        ],
         query: () => 
             Bind({
                 enrollment: learningApi.getEnrollmentByID(enrollmentID)

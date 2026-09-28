@@ -2,17 +2,15 @@ import { contentApi } from "@/entities/content/api"
 import { useGuardedCurrentUser } from "@/entities/identity/providers/current-user-provider"
 import { learningApi } from "@/entities/learning/api"
 import { useMutation, useQuery } from "@/shared/lib/compose"
-import { QueryKeys } from "@/shared/lib/query-keys"
 import { Routes } from "@/shared/lib/routes-constants"
 import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 
 export const useEnrolledCoursesSectionVM = () => {
     const navigate = useNavigate()
-    const {user} = useGuardedCurrentUser()
+    const { user } = useGuardedCurrentUser()
 
     const { data, error } = useQuery({
-        tags: [QueryKeys.enrollmentsMe],
         query: () => learningApi.getEnrollmentsByUser(user.id),
     })
 
@@ -27,31 +25,27 @@ export const useEnrolledCoursesSectionVM = () => {
 
 
 export const useCreatedCoursesSectionVM = () => {
-    const {user} = useGuardedCurrentUser()
+    const { user } = useGuardedCurrentUser()
     const navigate = useNavigate()
 
 
     const {data: courses, error} = useQuery({
-        query: ()=> contentApi.getCoursesCreatedBy(user.id),
-        tags: [QueryKeys.coursesMe]
+        query: () => contentApi.getCoursesCreatedBy(user.id),
+        tags: 'my-courses'
     })
 
 
     const {mutate: activate} = useMutation({
         mutation: contentApi.activateCourse,
-        invalidates: [QueryKeys.coursesMe],
-        onSuccess() {
-            toast('Успешно активировано')
-        },
+        refetches: 'my-courses',
+        onSuccess: () => toast('Успешно активировано')
     })
 
 
     const {mutate: archive} = useMutation({
         mutation: contentApi.archiveCourse,
-        onSuccess() {
-            toast("Успешно архивировано")
-        },
-        invalidates: [QueryKeys.coursesMe]
+        refetches: 'my-courses',
+        onSuccess: () => toast("Успешно архивировано")
     })
 
     const onCourseSelect = (courseID: string) => () => navigate(Routes.courseEditPage(courseID))

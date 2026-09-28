@@ -10,15 +10,13 @@ import { List, LogIn } from 'lucide-react';
 export const CoursePage = () => {
     const { courseID } = useParams<{ courseID: string }>()
 
-    const {data,  error, onCourseEnroll, isPending, onEnrollmentSelect} = useCoursePageVM({courseID: courseID!})
+    const {courseData, error, onCourseEnroll, isPending, onEnrollmentSelect} = useCoursePageVM({courseID: courseID!})
 
-    if (!data) {
-        return error
+    if (!courseData) return error
             ?   <ErrorFallback message={error.message} />
             :   <Spinner />
-    }
 
-    const {course, topics, enrollment} = data
+    const {course, topics, enrollment} = courseData
     
 
     return (

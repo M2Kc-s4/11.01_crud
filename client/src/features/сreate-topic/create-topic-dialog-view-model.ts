@@ -1,6 +1,5 @@
 import { contentApi } from "@/entities/content/api";
 import type { ApiError } from "@/shared/errors";
-import { QueryKeys } from "@/shared/lib/query-keys";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import {z} from 'zod'
@@ -35,7 +34,7 @@ export const useCreateTopicDialogVM = ({courseID, onOpenChange}: CreateTopicDial
 
     const { mutate, isPending } = useMutation({
         mutation: contentApi.createTopic,
-
+        refetches: 'editable-course',
         onSuccess: ()=> {
             toast.success('Тема успешно создана')
             onOpenChange(false)
@@ -44,11 +43,7 @@ export const useCreateTopicDialogVM = ({courseID, onOpenChange}: CreateTopicDial
         onError: (error: ApiError) => {
             toast.error('Ошибка при создании темы', { description: error.message })
             control.setError('root', { message: error.message })
-        },
-        invalidates: [
-            QueryKeys.courseTopics(courseID),
-            QueryKeys.course(courseID)
-        ]
+        }
     })
 
 

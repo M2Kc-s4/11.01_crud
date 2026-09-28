@@ -12,9 +12,9 @@ import {
 
 import { Future } from 'fluent-future'
 
-function tagsKey(tags: string[]): string {
-	return [...tags].sort().join('\0')
-}
+const EMPTY_TAGS: string[] = []
+const EMPTY_DEPS: unknown[] = []
+
 
 class QueryRegistry {
 	private registry = new Map<string, Set<() => void>>()
@@ -32,7 +32,7 @@ class QueryRegistry {
 		}
 	}
 
-	invalidate(...tags: string[]): void {
+	refetch(tags: string[]): void {
 		const toRefetch = new Set<() => void>()
 		for (const tag of tags) {
 			this.registry.get(tag)?.forEach(r => toRefetch.add(r))
@@ -58,8 +58,9 @@ export function useQueryRegistry() {
 
 type UseQueryOptions<T, E> = {
 	query: () => Future<T, E>
-	tags: string[]
+	tags?: string[] | string
 	enabled?: boolean
+	deps?: unknown[]
 }
 
 type UseQueryResult<T, E> = {
@@ -81,17 +82,13 @@ type QueryState<T, E> = {
 	isSuccess: boolean
 }
 
-function shallowEqualArrays(a: string[], b: string[]): boolean {
-	if (a.length !== b.length) return false
 
-	for (let i = 0; i < a.length; i++) {
-		if (a[i] !== b[i]) return false
-	}
-
-	return true
-}
-
-export function useQuery<T, E = unknown>(params: UseQueryOptions<T, E>): UseQueryResult<T, E> {
+export function useQuery<T, E = unknown>({
+	query,
+	enabled = true,
+	tags = EMPTY_TAGS,
+	deps = EMPTY_DEPS,
+}: UseQueryOptions<T, E>): UseQueryResult<T, E> {
 	const registry = useQueryRegistry()
 	const [state, setState] = useState<QueryState<T, E>>({
 		data: undefined,
@@ -102,22 +99,12 @@ export function useQuery<T, E = unknown>(params: UseQueryOptions<T, E>): UseQuer
 		isSuccess: false,
 	})
 
-	const enabled = params.enabled ?? true
+	const queryRef = useRef(query)
+	queryRef.current = query
 
-	const query = useRef(params.query)
-	query.current = params.query
-
-	const tags = useRef<string[]>(params.tags)
-	const isFirstRun = useRef(true)
-
-	const key = useMemo(() => tagsKey(params.tags), [params.tags])
-
-	const enabledRef = useRef(enabled)
-	enabledRef.current = enabled
+	const tagsArray = typeof tags === 'string' ? [tags] : tags
 
 	const run = useCallback((): void => {
-		if (!enabledRef.current) return
-
 		setState(s => ({
 			...s,
 			isLoading: s.data === undefined,
@@ -126,7 +113,7 @@ export function useQuery<T, E = unknown>(params: UseQueryOptions<T, E>): UseQuer
 			isSuccess: false,
 		}))
 
-		query.current()
+		queryRef.current()
 			.tap(data => {
 				setState({
 					data,
@@ -150,33 +137,13 @@ export function useQuery<T, E = unknown>(params: UseQueryOptions<T, E>): UseQuer
 	}, [])
 
 	useEffect(() => {
-		const tagsChanged = !shallowEqualArrays(tags.current, params.tags)
-		tags.current = params.tags
-
-		if (!enabled) {
-			isFirstRun.current = false
-			return
-		}
-
-		if (isFirstRun.current) {
-			isFirstRun.current = false
-			
-			run()
-			return
-		}
-
-		if (tagsChanged) {			
-			run()
-			return
-		}
-	}, [key, enabled])
+		if (enabled) run()
+	}, [enabled, ...deps])
 
 	useEffect(() => {
-		if (!enabled) return
-
-		const unregister = registry.register(params.tags, run)
+		const unregister = registry.register(tagsArray, run)
 		return unregister
-	}, [key, registry, enabled])
+	}, [registry])
 
 	return { ...state, refetch: run }
 }
@@ -187,7 +154,7 @@ type FutureFunction<T, E, P extends Array<any>> = (...args: P) => Future<T, E>
 
 type UseMutationOptions<T, E, P extends Array<any>> = {
 	mutation: FutureFunction<T, E, P>
-	invalidates?: ((data: T, ...args: P) => string[]) | string[]
+	refetches?: ((data: T, ...args: P) => string[] | string) | string[] | string
 	onSuccess?: (data: T) => void
 	onError?: (error: E) => void
 }
@@ -218,8 +185,8 @@ export function useMutation<T, E, P extends Array<any>>(params: UseMutationOptio
 
 	const mutation = useRef(params.mutation)
 	mutation.current = params.mutation
-	const invalidates = useRef(params.invalidates)
-	invalidates.current = params.invalidates
+	const refetches = useRef(params.refetches)
+	refetches.current = params.refetches
 	const onSuccess = useRef(params.onSuccess)
 	onSuccess.current = params.onSuccess
 	const onError = useRef(params.onError)
@@ -231,12 +198,15 @@ export function useMutation<T, E, P extends Array<any>>(params: UseMutationOptio
 		const future = mutation.current(...args)
 
 		void future.tap(data => {
-			if (invalidates.current) {
-				registry.invalidate(...
-					typeof invalidates.current === "function"
-						? invalidates.current(data, ...args)
-						: invalidates.current
-				)
+			if (refetches.current) {
+				const toRefetch = typeof refetches.current === "function"
+					? refetches.current(data, ...args)
+					: refetches.current
+				registry.refetch(
+					typeof toRefetch === 'string'
+						? 	[toRefetch]
+						:   toRefetch
+				) 
 			}
 
 			onSuccess.current?.(data)

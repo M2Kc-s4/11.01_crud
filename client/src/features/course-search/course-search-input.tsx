@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Input } from '@/shared/ui/input';
 import { Search, X } from 'lucide-react';
 import { contentApi } from '@/entities/content/api';
-import { QueryKeys } from '@/shared/lib/query-keys';
 import { CourseSearchResult } from './course-search-result';
 import { Spinner } from '@/shared/ui/spinner';
 import { Routes } from '@/shared/lib/routes-constants';
@@ -16,9 +15,9 @@ export const CourseSearch = () => {
     const containerRef = useRef<HTMLDivElement>(null)
 
     const { data: courses, isLoading } = useQuery({
-        tags: [QueryKeys.courseSearch(query)],
         query: () => contentApi.searchCourses(query),
         enabled: query.length >= 2,
+        deps: [query]
     })
 
 

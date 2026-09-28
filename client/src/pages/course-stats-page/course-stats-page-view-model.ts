@@ -1,7 +1,6 @@
 import { contentApi } from "@/entities/content/api"
 import { learningApi } from "@/entities/learning/api"
 import { useQuery } from "@/shared/lib/compose"
-import { QueryKeys } from "@/shared/lib/query-keys"
 import type { TopicEnrollmentRead } from "@contracts"
 import { Bind } from "fluent-future"
 
@@ -23,9 +22,6 @@ export type StudentStatsType = {
 
 export const useCourseStatsPageVM = ({ courseID }: CourseStatsPageVMProps) => {
     const { data, error } = useQuery({
-        tags: [
-            QueryKeys.course(courseID)
-        ],
         query: () =>
             Bind({
                 course: contentApi.getCourseByID(courseID),

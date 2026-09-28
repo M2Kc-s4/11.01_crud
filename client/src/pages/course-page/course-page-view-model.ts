@@ -1,6 +1,5 @@
 import { contentApi } from '@/entities/content/api';
 import { learningApi } from '@/entities/learning/api';
-import { QueryKeys } from '@/shared/lib/query-keys';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Bind } from 'fluent-future';
@@ -18,12 +17,7 @@ export const useCoursePageVM = ({ courseID }: CoursePageVMProps) => {
     const {user} = useGuardedCurrentUser()
 
 
-    const {data, error} = useQuery({
-        tags: [
-            QueryKeys.enrollmentByCourse(courseID),
-            QueryKeys.course(courseID),
-            QueryKeys.courseTopics(courseID)
-        ],
+    const {data: courseData, error} = useQuery({
         query: () => Bind({
             course: contentApi.getCourseByID(courseID),
             topics: contentApi.getTopicsByCourse(courseID),
@@ -32,28 +26,24 @@ export const useCoursePageVM = ({ courseID }: CoursePageVMProps) => {
     })
 
 
-    const {mutate, isPending} = useMutation({
+    const {mutate: enrollCourse, isPending} = useMutation({
         mutation: learningApi.enrollCourse,
         onError: err => toast(err.message),
         onSuccess: enrollment => {
             toast.success('Вы подписались на курс')
             navigate(Routes.enrollmentPage(enrollment.id))
         },
-        invalidates: courseID => [
-            QueryKeys.enrollmentsMe,
-            QueryKeys.enrollmentByCourse(courseID)
-        ]
     })
 
     const onEnrollmentSelect = (enrollmentID: string) => () => navigate(Routes.enrollmentPage(enrollmentID))
 
-    const onCourseEnroll = () => mutate(courseID)
+    const onCourseEnroll = () => enrollCourse(courseID)
 
 
     return {
         onCourseEnroll,
         isPending,
-        data,
+        courseData,
         error,
         onEnrollmentSelect
     }

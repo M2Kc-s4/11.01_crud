@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import { learningApi } from '@/entities/learning/api';
-import { QueryKeys } from '@/shared/lib/query-keys';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Routes } from '@/shared/lib/routes-constants';
@@ -17,24 +16,14 @@ export const useTopicPassingPageVM = ({ topicID }: TopicPassingPageVMProps) => {
 
     
     const { data: questionsToAnswer, error } = useQuery({
-        tags: [QueryKeys.topicQuestionsToPass(topicID)],
         query: () => learningApi.startTopic(topicID),
     })
 
     
-    const { mutate: completeTopic, isPending: isSubmitting } = useMutation({
+    const { mutate, isPending: isSubmitting } = useMutation({
         mutation: learningApi.completeTopic,
-        onSuccess: (enrollment) => {
-            navigate(Routes.enrollmentPage(enrollment.id))
-        },
-        onError: () => {
-            toast.error('Не удалось отправить ответы')
-        },
-        invalidates: enrollment => [
-            QueryKeys.enrollment(enrollment.id),
-            QueryKeys.enrollmentTopics(enrollment.id),
-            QueryKeys.enrollmentsMe
-        ]
+        onSuccess: enrollment => navigate(Routes.enrollmentPage(enrollment.id)),
+        onError: () => toast.error('Не удалось отправить ответы'),
     })
 
 
@@ -57,7 +46,7 @@ export const useTopicPassingPageVM = ({ topicID }: TopicPassingPageVMProps) => {
 
     const handleSubmit = () => {
         if (isAllAnswered) {
-            completeTopic({
+            mutate({
                 topicID,
                 questions: Object.entries(answeredQuestions)
                     .map(([questionID, selectedAnswers]) => ({
