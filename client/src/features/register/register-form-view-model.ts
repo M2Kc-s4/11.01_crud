@@ -24,14 +24,17 @@ const registerForm = z.object({
         .nonempty("Это поле обязательно")
         .min(8, "Слишком короткий пароль")
 })
-.refine(data=>data.password === data.passwordRepeat, {
-    error: "Пароли не совпадают",
-    path: ['passwordRepeat']
-})
+.refine(
+    data => data.password === data.passwordRepeat, 
+    {
+        error: "Пароли не совпадают",
+        path: ['passwordRepeat']
+    }
+)
 
 
 export const useRegisterFormMV = () => {
-    const {control, formState: {errors}} = useForm({
+    const {register, setError, handleSubmit, formState: {errors}} = useForm({
         resolver: zodResolver(registerForm)
     })
 
@@ -44,15 +47,15 @@ export const useRegisterFormMV = () => {
             toast(`Пользователь с именем ${user.username} зарегистрирован.`),
 
         onError: err =>
-            control.setError("root", {message: err.message})
+            setError("root", {message: err.message})
     })
 
-    const onSubmit = control.handleSubmit((data) => mutate(data))
+    const onSubmit = handleSubmit(mutate)
 
     return {
         errors,
         onSubmit,
-        control,
+        register,
         isPending
     }
 }

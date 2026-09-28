@@ -2,7 +2,7 @@ import { contentApi } from "@/entities/content/api";
 import type { ApiError } from "@/shared/errors";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import {z} from 'zod'
+import z, {object, string } from 'zod'
 import {zodResolver} from '@hookform/resolvers/zod'
 import { useMutation } from "@/shared/lib/compose";
 
@@ -13,11 +13,11 @@ type CreateTopicDialogVMProps = {
 }
 
 
-const formShema = z.object({
-    title: z.string()
+const formShema = object({
+    title: string()
         .min(8, 'Минимум 8 символов')
         .max(64, 'Маскимум 64 символа'),
-    description: z.string()
+    description: string()
         .min(8, 'Минимум 8 символов')
         .max(64, 'Маскимум 64 символа'),
     accessType: z.enum(['free', 'afterPrevious'], 'Неверный тип доступа')

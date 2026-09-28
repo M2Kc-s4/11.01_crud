@@ -8,7 +8,7 @@ import { Spinner } from "@/shared/ui/spinner"
 
 export const RegisterForm = () => {
     const {
-        control, 
+        register,
         onSubmit,
         errors,
         isPending
@@ -26,13 +26,13 @@ export const RegisterForm = () => {
                 <form onSubmit={onSubmit} className="flex flex-col gap-y-4">
                     <div className="grid gap-1">
                         <Label htmlFor="name">Имя пользователя:</Label>
-                        <Input {...control.register('name')} /> 
+                        <Input {...register('name')} /> 
                         <ErrorMessage error={errors.name} />
                     </div>
 
                     <div className="grid gap-1">
                         <Label htmlFor="telegram_link">Ссылка на телеграм:</Label>
-                        <Input {...control.register('telegramLink')}/>
+                        <Input {...register('telegramLink')}/>
                         <ErrorMessage error={errors.telegramLink} />
                     </div>
             
@@ -40,13 +40,13 @@ export const RegisterForm = () => {
                     
                         <div className="grid gap-1">
                             <Label>Пароль:</Label>
-                            <Input {...control.register('password')} />
+                            <Input {...register('password')} />
                             <ErrorMessage error={errors.password} />
                         </div>
                     
                         <div className="grid gap-1">
                             <Label>Повтор пароля:</Label>
-                            <Input {...control.register('passwordRepeat')}/>
+                            <Input {...register('passwordRepeat')}/>
                             <ErrorMessage error={errors.passwordRepeat} />
                         </div>
                     

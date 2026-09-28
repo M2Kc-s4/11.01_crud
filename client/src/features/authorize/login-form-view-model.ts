@@ -1,15 +1,22 @@
 import  { useForm } from "react-hook-form"
 import { api } from "@/shared/api/query-client"
-import type { ApiError } from "@/shared/errors"
 import {useNavigate} from 'react-router-dom'
 import { useCurrentUser } from "@/entities/identity/providers/current-user-provider"
 import { userApi } from "@/entities/identity/api"
 import { useMutation } from "@/shared/lib/compose"
+import { object, string } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
 
-export type LoginForm = {
-    password: string,
-    username: string
-}
+
+const formShema = object({
+    password: string()
+        .nonempty('Это поле обязательно')
+        .min(8, 'Слишком короткий пароль'),
+    username: string()
+        .nonempty('Это поле обязательно')
+        .min(8, 'Слишком которкое имя')
+})
+
 
 export const useLoginFormVM = () => {
     const { updateCurrentUser } = useCurrentUser()
@@ -17,15 +24,15 @@ export const useLoginFormVM = () => {
 
 
     const {
-        register, 
-        handleSubmit, 
+        setError,
+        register,
+        handleSubmit,
         formState: {errors}, 
-        setError
-    } = useForm<LoginForm>()
+    } = useForm({resolver: zodResolver(formShema)})
 
 
     const {mutate, isPending} = useMutation({
-        mutation: (data: LoginForm) => userApi
+        mutation: data => userApi
             .login(data)
             .map(({accessToken}) => accessToken)
             .tap(api.setBearer)
@@ -35,7 +42,7 @@ export const useLoginFormVM = () => {
             navigate('/')
         },
 
-        onError: (err: ApiError)  => {
+        onError: err => {
             if (err.status === 400) {
                 setError('root' , {message: 'Неверный логин или пароль'})
             } else {
@@ -44,25 +51,10 @@ export const useLoginFormVM = () => {
         }
     })
 
-
-    const fields = {
-        name: register('username', {
-            required: 'Это поле обязательно',
-            maxLength: {value: 32, message: "Слишком длинное имя"}, 
-            minLength: {value: 8, message: "Слишком которкое имя"},
-        }),
-
-        password: register('password', {
-            minLength: {value: 8, message: "Слишком короткий пароль"},
-            required: "Это поле обязательно",
-        }),
-    }
-
-
-    const onSubmit = handleSubmit(form => mutate(form))
+    const onSubmit = handleSubmit(mutate)
 
     return {
-        fields,
+        register,
         onSubmit,
         errors,
         isPending

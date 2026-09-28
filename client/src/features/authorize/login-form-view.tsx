@@ -9,7 +9,7 @@ import { Spinner } from "@/shared/ui/spinner";
 const LoginForm = () => {
     const {
         errors,
-        fields,
+        register,
         onSubmit,
         isPending
     } = useLoginFormVM()
@@ -30,12 +30,12 @@ const LoginForm = () => {
                     <div className="flex flex-col gap-6 mb-4">
                         <div className="grid gap-1">
                             <Label htmlFor="email">Логин</Label>
-                            <Input {...fields.name}/>
+                            <Input {...register('username')}/>
                             <ErrorMessage error={errors.username} />
                         </div>
                         <div className="grid gap-1">
                             <Label htmlFor="password">Пароль</Label>
-                            <Input {...fields.password}/>
+                            <Input {...register('password')}/>
                             <ErrorMessage error={errors.password} />
                         </div>
                     </div>

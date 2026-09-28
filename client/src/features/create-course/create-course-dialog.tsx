@@ -15,11 +15,19 @@ import { useForm } from 'react-hook-form';
 import type { ApiError } from '@/shared/errors';
 import { ErrorMessage } from '@/shared/ui/form-error-message';
 import { useMutation } from '@/shared/lib/compose';
+import { object, string } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 type CreateCourseDialogProps = {
     open: boolean,
     onOpenChange: (open: boolean)=> void
 }
+
+
+const formShema = object({
+    title: string(),
+    description: string()
+})
 
 
 type CreateCourseFormType = {
@@ -29,7 +37,12 @@ type CreateCourseFormType = {
 
 
 export const useCreateCoursesDialogVM = ({onOpenChange}: {onOpenChange: (open: boolean)=> void})=> {
-    const {register, handleSubmit, formState: {errors}, setError} = useForm<CreateCourseFormType>()
+    const {
+        register, 
+        handleSubmit, 
+        formState: {errors}, 
+        setError
+    } = useForm<CreateCourseFormType>({resolver: zodResolver(formShema)})
 
     const {mutate, isPending} = useMutation({
         mutation: contentApi.createCourse,
@@ -45,16 +58,13 @@ export const useCreateCoursesDialogVM = ({onOpenChange}: {onOpenChange: (open: b
     })
 
 
-    const onCourseCreate = handleSubmit(data => mutate(data))
+    const onCourseCreate = handleSubmit(mutate)
 
 
     return {
         onCourseCreate, 
         isPending, 
-        fields: {
-            title: register('title'),
-            description: register('description'),
-        },
+        register,
         errors
     }
 }
@@ -62,8 +72,7 @@ export const useCreateCoursesDialogVM = ({onOpenChange}: {onOpenChange: (open: b
 
 
 export const CreateCourseDialog = ({ open, onOpenChange }: CreateCourseDialogProps) => {
-    const {onCourseCreate, fields, errors, isPending} = useCreateCoursesDialogVM({onOpenChange})
-
+    const {onCourseCreate, register, errors, isPending} = useCreateCoursesDialogVM({onOpenChange})
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -75,12 +84,12 @@ export const CreateCourseDialog = ({ open, onOpenChange }: CreateCourseDialogPro
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
                             <Label htmlFor="title">Название</Label>
-                            <Input {...fields.title} />
+                            <Input {...register('title')} />
                             <ErrorMessage error={errors.title} />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="description">Описание</Label>
-                            <Textarea {...fields.description} rows={4} />
+                            <Textarea {...register('description')} rows={4} />
                             <ErrorMessage error={errors.description} />
                         </div>
                     </div>
