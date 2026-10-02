@@ -3,6 +3,8 @@ import { Fragment } from "react/jsx-runtime";
 import EnrollmentCard from "./enrollment-card";
 import { sorted } from "@/shared/lib/utils";
 import { Badge } from "@/shared/ui/badge";
+import { EmptyState } from "@/shared/ui/empty-state";
+import { BadgeQuestionMark } from "lucide-react";
 
 type EnrollmentListProps = {
     enrollments: EnrollmentRead[]
@@ -17,10 +19,10 @@ export default function EnrollmentList({ enrollments }: EnrollmentListProps) {
             </div>
             <div className="space-y-3 mt-2">
                 {
-                    sorted(enrollments, 'progress')
-                        .map(enrollment => 
-                            <EnrollmentCard key={enrollment.userID} enrollment={enrollment}/>
-                        )
+                    enrollments.length
+                        ?   sorted(enrollments, 'progress')
+                                .map(enrollment => <EnrollmentCard key={enrollment.userID} enrollment={enrollment}/>)
+                        :   <EmptyState icon={BadgeQuestionMark} title="На курс не записан ни один студент" />
                 }
             </div>
         </Fragment>

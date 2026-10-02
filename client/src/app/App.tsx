@@ -7,6 +7,7 @@ import { Spinner } from "@/shared/ui/spinner"
 import { QueryRegistryProvider } from "@/shared/lib/useQuery"
 import Router from "./router"
 import CurrentUserProvider from "./providers/current-user-provider"
+import { SearchProvider } from "./providers/search-context"
 
 
 function Composition({children}: PropsWithChildren) {
@@ -16,8 +17,10 @@ function Composition({children}: PropsWithChildren) {
                 <QueryRegistryProvider>
                     <BrowserRouter>
                         <CurrentUserProvider>
-                            {children}
-                            <Toaster position='top-right' />
+                            <SearchProvider>
+                                {children}
+                                <Toaster position='top-right' />
+                            </SearchProvider>
                         </CurrentUserProvider>
                     </BrowserRouter>
                 </QueryRegistryProvider>

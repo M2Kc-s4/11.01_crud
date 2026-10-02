@@ -23,7 +23,8 @@ function useViewModel(enrollmentID: string) {
             enrollment: enrollmentManageApi.getEnrollmentByID(enrollmentID)
         }).bind({
             course: ({enrollment}) => enrollmentManageApi.getCourseInfo(enrollment.courseID)
-        })
+        }),
+        key: 'enrollment-manage-' + enrollmentID
     })
 
     const copy = useClipboard()
@@ -44,6 +45,7 @@ export default function EnrollmentInfo({ enrollmentID }: EnrollmentInfoProps) {
     const { enrollmentInfo, error, onCourseCopy } = useViewModel(enrollmentID)
 
     if (error) return <ErrorFallback message={error.message} />
+    
     if (!enrollmentInfo) return <Spinner />
 
 

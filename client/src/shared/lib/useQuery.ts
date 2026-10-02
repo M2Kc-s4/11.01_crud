@@ -18,6 +18,15 @@ const EMPTY_DEPS: unknown[] = []
 
 class QueryRegistry {
 	private registry = new Map<string, Set<() => void>>()
+	private cache = new Map<string, unknown>()
+
+	getCached<T>(key: string): T | undefined {
+		return this.cache.get(key) as T | undefined
+	}
+
+	setCached<T>(key: string, data: T): void {
+		this.cache.set(key, data)
+	}
 
 	register(tags: string[], refetch: () => void): () => void {
 		for (const tag of tags) {
@@ -58,6 +67,7 @@ export function useQueryRegistry() {
 
 type UseQueryOptions<T, E> = {
 	query: () => Future<T, E>
+	key?: string
 	tags?: string[] | string
 	enabled?: boolean
 	deps?: unknown[]
@@ -88,19 +98,26 @@ export function useQuery<T, E = unknown>({
 	enabled = true,
 	tags = EMPTY_TAGS,
 	deps = EMPTY_DEPS,
+	key
 }: UseQueryOptions<T, E>): UseQueryResult<T, E> {
 	const registry = useQueryRegistry()
-	const [state, setState] = useState<QueryState<T, E>>({
-		data: undefined,
-		error: undefined,
-		isLoading: false,
-		isFetching: false,
-		isError: false,
-		isSuccess: false,
+	const [state, setState] = useState<QueryState<T, E>>(() => {
+		const cached = key ? registry.getCached<T>(key) : undefined
+		return {
+			data: cached,
+			error: undefined,
+			isLoading: cached === undefined,
+			isFetching: false,
+			isError: false,
+			isSuccess: cached !== undefined,
+		}
 	})
 
 	const queryRef = useRef(query)
 	queryRef.current = query
+
+	const keyRef = useRef(key)
+	keyRef.current = key
 
 	const tagsArray = typeof tags === 'string' ? [tags] : tags
 
@@ -115,6 +132,7 @@ export function useQuery<T, E = unknown>({
 
 		queryRef.current()
 			.tap(data => {
+				if (keyRef.current) registry.setCached(keyRef.current, data)
 				setState({
 					data,
 					error: undefined,

@@ -5,9 +5,10 @@ import { enrollmentListApi } from "./api"
 import ROUTES from "@/app/routes"
 import { ErrorFallback } from "@/shared/ui/error-fallback"
 import { Spinner } from "@/shared/ui/spinner"
-import { BookOpen } from "lucide-react"
+import { Book, BookOpen } from "lucide-react"
 import { Button } from "@/shared/ui/button"
 import EnrollmentCard from "./enrollment-card"
+import { EmptyState } from "@/shared/ui/empty-state"
 
 
 function useViewModel() {
@@ -44,17 +45,20 @@ export default function HomepageEnrollmentList() {
                 </div>
                 <Button variant="ghost" size="sm">Посмотреть все →</Button>
             </div>
-            {enrollments.length
-                ?   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {enrollments.map(enrollment => 
-                            <EnrollmentCard
-                                key={enrollment.id}
-                                enrollment={enrollment}
-                                onSelect={onEnrollmentSelect(enrollment.id)}
-                            />
-                        )}
-                    </div>
-                :   <ErrorFallback message='Нет подписок' />
+            {
+                enrollments.length
+                    ?   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {
+                                enrollments.map(enrollment => 
+                                    <EnrollmentCard
+                                        key={enrollment.id}
+                                        enrollment={enrollment}
+                                        onSelect={onEnrollmentSelect(enrollment.id)}
+                                    />
+                                )
+                            }
+                        </div>
+                    :   <EmptyState icon={Book} title="У вас нету подписок" />
             }
         </section>
     )

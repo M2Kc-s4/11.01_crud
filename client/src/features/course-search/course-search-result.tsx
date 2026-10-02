@@ -1,29 +1,62 @@
+// features/course-search/course-search-result.tsx
 import type { CourseRead } from '@contracts';
-import { Avatar, AvatarFallback } from '@/shared/ui/avatar';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Users, PlayCircle } from 'lucide-react';
+import { cn } from '@/shared/lib/utils';
 
 type CourseSearchResultProps = {
     course: CourseRead
     onSelect: () => void
+    isSelected?: boolean
 }
 
-export default function CourseSearchResult({ course, onSelect }: CourseSearchResultProps) {
+export default function CourseSearchResult({
+    course,
+    onSelect,
+    isSelected,
+}: CourseSearchResultProps) {
     return (
-        <div
+        <button
+            type="button"
             onClick={onSelect}
-            className="flex items-center gap-3 px-4 py-2 hover:bg-muted cursor-pointer transition-colors"
+            className={cn(
+                'w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
+                'hover:bg-accent hover:text-accent-foreground',
+                isSelected && 'bg-accent text-accent-foreground'
+            )}
         >
-            <Avatar className="h-8 w-8 bg-primary/10">
-                <AvatarFallback className="text-primary">
-                    <BookOpen className="h-4 w-4" />
-                </AvatarFallback>
-            </Avatar>
+            <div className="shrink-0 flex items-center justify-center h-10 w-10 rounded-lg bg-primary/10">
+                <BookOpen className="h-5 w-5 text-primary" />
+            </div>
+
             <div className="flex-1 min-w-0">
-                <div className="font-medium truncate">{course.title}</div>
-                <div className="text-xs text-muted-foreground truncate">
-                    {course.description || 'Нет описания'}
+                <div className="flex items-center gap-2">
+                    <span className="font-medium truncate">{course.title}</span>
+                </div>
+
+                {
+                    course.description && 
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">
+                            {course.description}
+                        </p>
+                }
+
+                <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                {
+                    course.createdByName && 
+                        <span className="flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            {course.createdByName}
+                        </span>
+                }
+                {
+                    !!course.topicsCount  && 
+                        <span className="flex items-center gap-1">
+                            <PlayCircle className="h-3 w-3" />
+                            {course.topicsCount} тем
+                        </span>
+                }
                 </div>
             </div>
-        </div>
+        </button>
     )
 }

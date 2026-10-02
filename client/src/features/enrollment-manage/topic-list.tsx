@@ -2,7 +2,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/shared/ui/badge";
 import type { EnrollmentRead } from "@contracts";
 import TopicCard from "./topic-card";
-import { GitCommitVerticalIcon } from "lucide-react";
+import { BadgeQuestionMark, GitCommitVerticalIcon } from "lucide-react";
 import { useQuery } from "@/shared/lib/useQuery";
 import { enrollmentManageApi } from "./api";
 import { useNavigate } from "react-router-dom";
@@ -10,6 +10,7 @@ import ROUTES from "@/app/routes";
 import { sorted } from "@/shared/lib/utils";
 import { ErrorFallback } from "@/shared/ui/error-fallback";
 import { Spinner } from "@/shared/ui/spinner";
+import { EmptyState } from "@/shared/ui/empty-state";
 
 type TopicListProps = {
     enrollment: EnrollmentRead
@@ -20,7 +21,8 @@ function useViewModel(courseID: string) {
     const navigate = useNavigate()
 
     const { data: topics, error } = useQuery({
-        query: () => enrollmentManageApi.getTopicsByCourse(courseID)
+        query: () => enrollmentManageApi.getTopicsByCourse(courseID),
+        key: 'enrollment-manage-topics-' + courseID
     })
 
     const onTopicSelect = (topicID: string) => () => navigate(ROUTES.topicPassingPage(topicID))
@@ -51,24 +53,28 @@ export default function TopicList({ enrollment }: TopicListProps) {
                     </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                    <div className="space-y-3 mt-2 overflow-y-scroll">
-                        {sorted(topics, 'number')
-                            .map((topic, index) => 
-                                <>
-                                    {
-                                        index && 
-                                            <div className="p-0 m-0 ml-3.5 flex justify-center items-center w-fit h-7.5 overflow-hidden">
-                                                <GitCommitVerticalIcon size={40} />
-                                            </div>
-                                    }
-                                    <TopicCard
-                                        topic={topic}
-                                        key={topic.id}
-                                        enrollment={enrollment}
-                                        onSelect={onTopicSelect(topic.id)}
-                                    />
-                                </>
-                        )}
+                    <div className="space-y-3 mt-2">
+                        {   
+                            topics.length
+                                ?   sorted(topics, 'number')
+                                        .map((topic, index) => 
+                                            <>
+                                                {
+                                                    index && 
+                                                        <div className="p-0 m-0 ml-3.5 flex justify-center items-center w-fit h-7.5 overflow-hidden">
+                                                            <GitCommitVerticalIcon size={40} />
+                                                        </div>
+                                                }
+                                                <TopicCard
+                                                    topic={topic}
+                                                    key={topic.id}
+                                                    enrollment={enrollment}
+                                                    onSelect={onTopicSelect(topic.id)}
+                                                />
+                                            </>
+                                        )
+                                :   <EmptyState icon={BadgeQuestionMark} title="В курсе нет тем для прохождения" />
+                        }
                     </div>
                 </AccordionContent>
             </AccordionItem>

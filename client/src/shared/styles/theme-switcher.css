@@ -13,3 +13,9 @@ html.dark .theme__switcher {
         border-color: var(--color-amber-300);
     }
 }
+
+
+@keyframes equalizer {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}

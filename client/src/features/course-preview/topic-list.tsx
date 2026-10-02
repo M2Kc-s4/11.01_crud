@@ -1,10 +1,11 @@
 import { useQuery } from "@/shared/lib/useQuery";
-import { List } from "lucide-react";
+import { BadgeQuestionMark, List } from "lucide-react";
 import { coursePreviewApi } from "./api";
 import { ErrorFallback } from "@/shared/ui/error-fallback";
 import { Spinner } from "@/shared/ui/spinner";
 import { sorted } from "@/shared/lib/utils";
 import TopicCard from "./topic-card";
+import { EmptyState } from "@/shared/ui/empty-state";
 
 type TopicListProps = {
     courseID: string
@@ -38,8 +39,10 @@ export default function TopicList({ courseID }: TopicListProps) {
             </h2>
             <div className="grid gap-3">
                 {
-                    sorted(topics, 'number')
-                        .map(topic => <TopicCard topic={topic} key={topic.id} />)
+                    topics.length
+                        ?   sorted(topics, 'number')
+                                .map(topic => <TopicCard topic={topic} key={topic.id} />)
+                        :   <EmptyState icon={BadgeQuestionMark} title="В курсе нет тем" />
                 }
             </div>
         </div>
