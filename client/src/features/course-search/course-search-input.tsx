@@ -2,20 +2,20 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/shared/ui/input';
 import { Search, X } from 'lucide-react';
-import { contentApi } from '@/entities/content/api';
-import { CourseSearchResult } from './course-search-result';
 import { Spinner } from '@/shared/ui/spinner';
-import { Routes } from '@/shared/lib/routes-constants';
-import { useQuery } from '@/shared/lib/compose';
+import { useQuery } from '@/shared/lib/useQuery';
+import { courseSearchApi } from './api';
+import ROUTES from '@/app/routes';
+import CourseSearchResult from './course-search-result';
 
-export const CourseSearch = () => {
+export default function CourseSearch() {
     const [query, setQuery] = useState('')
     const [isOpen, setIsOpen] = useState(false)
     const navigate = useNavigate()
     const containerRef = useRef<HTMLDivElement>(null)
 
     const { data: courses, isLoading } = useQuery({
-        query: () => contentApi.searchCourses(query),
+        query: () => courseSearchApi.searchCourses(query),
         enabled: query.length >= 2,
         deps: [query]
     })
@@ -31,11 +31,13 @@ export const CourseSearch = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
 
+
     const handleSelect = (courseId: string) => {
         setQuery('')
         setIsOpen(false)
-        navigate(Routes.coursePage(courseId))
+        navigate(ROUTES.coursePage(courseId))
     }
+
 
     return (
         <div ref={containerRef} className="hidden md:flex items-center relative w-80">

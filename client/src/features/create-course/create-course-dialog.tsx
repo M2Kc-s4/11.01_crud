@@ -1,4 +1,3 @@
-import { contentApi } from '@/entities/content/api';
 import { Button } from '@/shared/ui/button';
 import {
     Dialog,
@@ -14,9 +13,11 @@ import { Textarea } from '@/shared/ui/textarea';
 import { useForm } from 'react-hook-form';
 import type { ApiError } from '@/shared/errors';
 import { ErrorMessage } from '@/shared/ui/form-error-message';
-import { useMutation } from '@/shared/lib/compose';
+import { useMutation } from '@/shared/lib/useQuery';
 import { object, string } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { createCourseApi } from './api';
+
 
 type CreateCourseDialogProps = {
     open: boolean,
@@ -36,7 +37,7 @@ type CreateCourseFormType = {
 }
 
 
-export const useCreateCoursesDialogVM = ({onOpenChange}: {onOpenChange: (open: boolean)=> void})=> {
+function useCreateCoursesDialogVM({onOpenChange}: {onOpenChange: (open: boolean)=> void}) {
     const {
         register, 
         handleSubmit, 
@@ -44,9 +45,10 @@ export const useCreateCoursesDialogVM = ({onOpenChange}: {onOpenChange: (open: b
         setError
     } = useForm<CreateCourseFormType>({resolver: zodResolver(formShema)})
 
+    
     const {mutate, isPending} = useMutation({
-        mutation: contentApi.createCourse,
-        refetches: 'my-courses',
+        mutation: createCourseApi.createCourse,
+        refetches: 'courses',
         onSuccess: () => {
             toast('Курс успешно создан')
             onOpenChange(false)
@@ -70,8 +72,7 @@ export const useCreateCoursesDialogVM = ({onOpenChange}: {onOpenChange: (open: b
 }
 
 
-
-export const CreateCourseDialog = ({ open, onOpenChange }: CreateCourseDialogProps) => {
+export default function CreateCourseDialog({ open, onOpenChange }: CreateCourseDialogProps) {
     const {onCourseCreate, register, errors, isPending} = useCreateCoursesDialogVM({onOpenChange})
 
     return (

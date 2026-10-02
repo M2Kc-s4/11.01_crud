@@ -1,7 +1,7 @@
-import { useCurrentUser } from "@/entities/identity/providers/current-user-provider";
 import type { UserRead } from "@contracts";
 import type { FC, PropsWithChildren } from "react";
 import { Navigate } from "react-router-dom";
+import { useCurrentUser } from "../providers/current-user-provider";
 
 export const RoleGuard: FC<PropsWithChildren & {roles: UserRead['roles']}> = ({children, roles}) => {
     const {user} = useCurrentUser()

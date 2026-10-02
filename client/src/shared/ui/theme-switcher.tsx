@@ -1,4 +1,4 @@
-import { useTheme } from '../providers/theme-provider'
+import { useTheme } from '../../app/providers/theme-provider'
 import '../styles/theme-switcher.css'
 
 export const ThemeSwitcher = () => {

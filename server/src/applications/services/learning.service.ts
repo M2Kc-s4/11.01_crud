@@ -21,10 +21,7 @@ export type StartTopicCMD = {
 export type CompleteTopicCMD = {
     topicID: string,
     uid: string,
-    questionAnswers: {
-        id: string, 
-        selectedAnswers: string[]
-    }[]
+    questions: Record<string, string[]>
 }
 
 
@@ -123,9 +120,10 @@ export default class LearningService {
             const questions = await uow.questions.listByTopic(topic.id)            
 
             const questionAnswers = HashMap.fromEntries(
-                cmd.questionAnswers.map((q => 
-                    [ID.from<Question>(q.id), q.selectedAnswers.map(ID.from<Answer>)]
-                ))
+                Object.entries(cmd.questions)
+                    .map(([question, answers]) => 
+                        [ID.from<Question>(question), answers.map(ID.from<Answer>)]
+                )
             )
 
             if (questionAnswers.size !== questions.length) {

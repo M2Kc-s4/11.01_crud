@@ -1,5 +1,5 @@
 import type { FC, HTMLAttributes } from "react"
-import { useClipboard } from "../hooks/useClipboard"
+import { useClipboard } from "../lib/useClipboard"
 import { Button } from "./button"
 
 export const CopyableSpan: FC<HTMLAttributes<HTMLSpanElement> & {value: any}> = ({value, ...params}) => {

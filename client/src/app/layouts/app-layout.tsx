@@ -1,10 +1,41 @@
-import { Header } from "@/widgets/header/view";
-import { Outlet } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
+import ROUTES from "../routes";
+import UserProfile from "./user-profile";
+import CourseSearch from "@/features/course-search/course-search-input";
 
-export const AppLayout = () => 
-<>
-    <Header />
-    <main className="container mx-auto px-4 py-8 space-y-12">
-        <Outlet />
-    </main>
-</>
+
+function Header() {
+    return (
+        <header className="border-b border-border bg-card sticky top-0 z-50">
+            <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+
+                <Link to={ROUTES.homepage} className="flex items-center gap-2" >
+                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm">
+                        🎻
+                    </div>
+                    <span className="font-bold text-lg">LearnHub</span>
+                </Link>
+
+                <div className="hidden md:flex items-center relative w-80">
+                    <CourseSearch />
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <UserProfile />
+                </div>
+            </div>
+        </header>
+    )
+}
+
+
+export default function AppLayout() {
+    return (
+        <>
+            <Header />
+            <main className="container mx-auto px-4 py-8 space-y-12">
+                <Outlet />
+            </main>
+        </>
+    )
+}

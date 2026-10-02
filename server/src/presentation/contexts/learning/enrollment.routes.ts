@@ -47,16 +47,14 @@ export const enrollmentRoutes = new Elysia()
         const { enrollmentID } = await learningService.completeTopic({
             topicID,
             uid,
-            questionAnswers: body
+            questions: body
         })
 
         return reader.enroll.firstBy({id: enrollmentID})
     }, {
-        body: t.Array(
-            t.Object({
-                id: t.String(),
-                selectedAnswers: t.Array(t.String())
-            })
+        body: t.Record(
+            t.String(),
+            t.Array(t.String())
         )
     }
 )

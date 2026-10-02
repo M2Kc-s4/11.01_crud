@@ -1,6 +1,5 @@
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { toast } from 'sonner';
-import { contentApi } from '@/entities/content/api';
 import {
     Dialog,
     DialogContent,
@@ -14,7 +13,8 @@ import { Plus, Trash2, CheckCircle } from 'lucide-react';
 import { ErrorMessage } from '@/shared/ui/form-error-message';
 import { zodResolver } from '@hookform/resolvers/zod';
 import z from 'zod';
-import { useMutation } from '@/shared/lib/compose';
+import { useMutation } from '@/shared/lib/useQuery';
+import { createQuestionApi } from './api';
 
 
 const formShema = z.object({
@@ -60,15 +60,17 @@ const useCreateQuestionDialogVM = ({topicID, onOpenChange}: CreateQuestionDialog
 
 
     const { mutate, isPending } = useMutation({
-        mutation: contentApi.createQuestion,
-        refetches: 'editable-topic',
-        onSuccess: () => {
+        mutation: createQuestionApi.createQuestion,
+        refetches: 'questions',
+        onSuccess() {
             toast.success('Вопрос создан')
 
             control._reset()
             onOpenChange(false)
         },
-        onError: error => toast.error('Ошибка', { description: error.message }),
+        onError(error) {
+            toast.error('Ошибка', { description: error.message })
+        }
     })
 
 

@@ -7,7 +7,7 @@ type CourseSearchResultProps = {
     onSelect: () => void
 }
 
-export const CourseSearchResult = ({ course, onSelect }: CourseSearchResultProps) => {
+export default function CourseSearchResult({ course, onSelect }: CourseSearchResultProps) {
     return (
         <div
             onClick={onSelect}
